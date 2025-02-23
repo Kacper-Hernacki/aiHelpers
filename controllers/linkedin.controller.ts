@@ -3,6 +3,7 @@ import { getPostContent } from "../utils/linkedIn/linkedInHelper";
 export const linkedinController = {
   extractLinkedInPost: async (req: Request, res: Response): Promise<void> => {
     try {
+      //Todo: change to scrape text and content from images
       const { url } = req.body;
       const response = await getPostContent(url);
       res.status(201).json({ status: "success", response });
