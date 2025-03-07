@@ -1,7 +1,7 @@
 version: "3"
 services:
   app:
-    image: ghcr.io/aiadaptiv/aihelpers:latest
+    image: ghcr.io/kacper-hernacki/aihelpers:latest
     ports:
       - "3000:3000"
     restart: unless-stopped
