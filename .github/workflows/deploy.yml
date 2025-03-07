@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -20,9 +21,8 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          REPO_LC=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')
-          docker build -t ghcr.io/$REPO_LC:latest .
-          docker push ghcr.io/$REPO_LC:latest
+          docker build -t ghcr.io/kacperher/aihelpers:latest .
+          docker push ghcr.io/kacperher/aihelpers:latest
 
       - name: Deploy to Droplet
         env:
