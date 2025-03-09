@@ -46,6 +46,6 @@ jobs:
               --name aihelpers-app \
               -p 3000:3000 \
               -e NODE_ENV=production \
-               -e API_KEY=${{ secrets.API_KEY }} \
+              -e API_KEY=${{ secrets.API_KEY }} \
               --restart unless-stopped \
               ghcr.io/kacper-hernacki/aihelpers:latest
