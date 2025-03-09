@@ -1,25 +1,7 @@
-version: "3.8"
+version: "3"
 services:
   app:
     image: ghcr.io/kacper-hernacki/aihelpers:latest
-    container_name: aihelpers
     ports:
       - "3000:3000"
     restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      - NODE_ENV=production
-      - DEBUG=false
-      - DATABASE_URL=${DATABASE_URL}
-      - API_KEY=${API_KEY}
-      - LINKEDIN_CLIENT_ID=${LINKEDIN_CLIENT_ID}
-      - LINKEDIN_CLIENT_SECRET=${LINKEDIN_CLIENT_SECRET}
-      - FLIGHT_API_KEY=${FLIGHT_API_KEY}
-      - SERPAPI_KEY=${SERPAPI_KEY}
-      - NOTION_API_KEY=${NOTION_API_KEY}
-      - NOTION_CALENDAR_ID=${NOTION_CALENDAR_ID}
-      - NOTION_PREFERRED_DESTINATIONS_ID=${NOTION_PREFERRED_DESTINATIONS_ID}
-      - NOTION_RESEARCH_HISTORY_DATABASE_ID=${NOTION_RESEARCH_HISTORY_DATABASE_ID}
-      - PERPLEXITY_API_KEY=${PERPLEXITY_API_KEY}
-      - DIGITALOCEAN_ACCESS_TOKEN=${DIGITALOCEAN_ACCESS_TOKEN}
