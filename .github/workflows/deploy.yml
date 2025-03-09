@@ -50,5 +50,5 @@ jobs:
               --restart unless-stopped \
               ghcr.io/kacper-hernacki/aihelpers:latest
 
-            # Restart Nginx to ensure proxy settings are applied
-            sudo systemctl restart nginx
+            # Use systemctl without sudo if configured properly
+            systemctl is-active nginx && systemctl restart nginx || echo "Nginx not running or restart failed"
