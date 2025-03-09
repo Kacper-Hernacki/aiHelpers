@@ -35,6 +35,7 @@ jobs:
           ssh-keyscan -H $DROPLET_IP >> ~/.ssh/known_hosts
           ssh -i deploy_key kacper@$DROPLET_IP << 'EOF'
             cd ~/aiAdaptiv
+            cp .env.local .env  
             docker-compose pull
             docker-compose up -d
           EOF
