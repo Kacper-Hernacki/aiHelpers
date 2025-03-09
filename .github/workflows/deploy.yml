@@ -32,5 +32,19 @@ jobs:
           key: ${{ secrets.DEPLOY_KEY }}
           script: |
             cd ~/aiAdaptiv
-            docker-compose pull
-            docker-compose up -d
+
+            # Stop and remove any existing containers
+            docker-compose down || true
+            docker stop aihelpers-app || true
+            docker rm aihelpers-app || true
+
+            # Pull the latest image
+            docker pull ghcr.io/kacper-hernacki/aihelpers:latest
+
+            # Run the container directly with Docker instead of Docker Compose
+            docker run -d \
+              --name aihelpers-app \
+              -p 3000:3000 \
+              -e NODE_ENV=production \
+              --restart unless-stopped \
+              ghcr.io/kacper-hernacki/aihelpers:latest
