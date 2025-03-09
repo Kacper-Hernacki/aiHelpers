@@ -33,7 +33,7 @@ jobs:
           chmod 600 deploy_key
           mkdir -p ~/.ssh
           ssh-keyscan -H $DROPLET_IP >> ~/.ssh/known_hosts
-          scp -i deploy_key aiHelpers/Caddyfile kacper@$DROPLET_IP:~/aiAdaptiv/
+          scp -i deploy_key Caddyfile kacper@$DROPLET_IP:~/aiAdaptiv/
           ssh -i deploy_key kacper@$DROPLET_IP << 'EOF'
             cd ~/aiAdaptiv
             docker-compose pull
