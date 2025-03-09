@@ -1,0 +1,29 @@
+api.aiadaptiv.com {
+    # Reverse proxy configuration
+    reverse_proxy app:3000
+
+    # Enable compression for faster page loads
+    encode gzip
+
+    # Security headers
+    header {
+        # Enable HSTS
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        # Prevent MIME type sniffing
+        X-Content-Type-Options "nosniff"
+        # Clickjacking protection
+        X-Frame-Options "SAMEORIGIN"
+        # XSS protection
+        X-XSS-Protection "1; mode=block"
+        # Referrer policy
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    # Log configuration
+    log {
+        output file /data/logs/access.log {
+            roll_size 10MB
+            roll_keep 10
+        }
+    }
+} 

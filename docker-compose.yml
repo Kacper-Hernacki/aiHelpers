@@ -3,5 +3,30 @@ services:
   app:
     image: ghcr.io/kacper-hernacki/aihelpers:latest
     ports:
-      - "3000:3000"
+      - "3000"
     restart: unless-stopped
+    networks:
+      - app_network
+    labels:
+      - "traefik.enable=true"
+
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:
