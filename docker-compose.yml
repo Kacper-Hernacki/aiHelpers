@@ -2,7 +2,8 @@ version: "3"
 services:
   app:
     image: ghcr.io/kacper-hernacki/aihelpers:latest
-    ports:
+    container_name: aihelpers-app
+    expose:
       - "3000"
     restart: unless-stopped
     networks:
@@ -12,11 +13,12 @@ services:
 
   caddy:
     image: caddy:2
+    container_name: caddy
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
     restart: unless-stopped
