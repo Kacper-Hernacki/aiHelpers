@@ -1,7 +1,8 @@
-version: "3"
+version: "3.8"
 services:
   app:
     image: ghcr.io/kacper-hernacki/aihelpers:latest
+    container_name: aihelpers
     ports:
       - "3000:3000"
     restart: unless-stopped
