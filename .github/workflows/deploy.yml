@@ -47,6 +47,7 @@ jobs:
               -p 127.0.0.1:3000:3000 \
               -e NODE_ENV=production \
               -e API_KEY=${{ secrets.API_KEY }} \
+              -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
               --restart unless-stopped \
               ghcr.io/kacper-hernacki/aihelpers:latest
 

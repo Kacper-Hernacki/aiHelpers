@@ -1,11 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearchPostgres"]
 }
 
 datasource db {
@@ -13,8 +8,37 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
+model message_history {
+  id                Int       @id @default(autoincrement())
+  conversation_uuid String?
+  message           String
+  message_type      String
+  reflection        String?
+  created_at        DateTime? @default(now())
+}
+
+model notes {
+  id          Int    @id @default(autoincrement())
+  name        String
+  description String
+}
+
+model resources {
+  id          Int       @id @default(autoincrement())
+  content     String
+  source_list String[]
+  summary     String?
+  tags        String[]
+  categories  String[]
+  created_at  DateTime? @default(now())
+}
+
+model skills {
+  id                 Int       @id @default(autoincrement())
+  name               String
+  description        String
+  usage_instructions String
+  search_tags        String[]
+  parameter_schema   Json
+  created_at         DateTime? @default(now())
 }
