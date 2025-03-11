@@ -10,16 +10,12 @@ dotenv.config();
 const app = express();
 
 const port = process.env.PORT || 3000;
-app.listen(port, async () => {
-  console.log(`Example app listening at http://localhost:${port}`);
-});
-
 app.use(bodyParser.json());
 app.use(cors());
 
-// app.use(apiKeyAuth);
+app.use(apiKeyAuth);
 
-// applyRoutes(app);
+applyRoutes(app);
 
 app.get("/", async (req: Request, res: Response) => {
   try {
@@ -28,4 +24,8 @@ app.get("/", async (req: Request, res: Response) => {
     console.error(error);
     res.status(500).send("Error while connecting to the database");
   }
+});
+
+app.listen(port, async () => {
+  console.log(`Example app listening at http://localhost:${port}`);
 });
