@@ -21,7 +21,8 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build -t ghcr.io/kacper-hernacki/aihelpers:latest .
+          docker build -t ghcr.io/kacper-hernacki/aihelpers:latest \
+            --build-arg DATABASE_URL=${{ secrets.DATABASE_URL }} .
           docker push ghcr.io/kacper-hernacki/aihelpers:latest
 
       - name: Deploy to Digital Ocean
@@ -44,7 +45,7 @@ jobs:
             # Run the container directly with Docker
             docker run -d \
               --name aihelpers-app \
-              -p 127.0.0.1:3000:3000 \
+              -p 3000:3000 \
               -e NODE_ENV=production \
               -e API_KEY=${{ secrets.API_KEY }} \
               -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
