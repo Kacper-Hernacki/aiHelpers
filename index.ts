@@ -9,7 +9,7 @@ dotenv.config();
 
 const app = express();
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 app.use(bodyParser.json());
 app.use(cors());
 
@@ -26,6 +26,6 @@ app.get("/", async (req: Request, res: Response) => {
   }
 });
 
-app.listen(port, async () => {
-  console.log(`Example app listening at http://localhost:${port}`);
+app.listen(port, "0.0.0.0", async () => {
+  console.log(`Example app listening at http://0.0.0.0:${port}`);
 });
