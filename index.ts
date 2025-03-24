@@ -1,31 +1,65 @@
-import express, { Request, Response } from "express";
-import bodyParser from "body-parser";
-import dotenv from "dotenv";
-import apiKeyAuth from "./middleware/apiKeyAuth";
+import express from "express";
 import cors from "cors";
-import applyRoutes from "./routes";
+import dotenv from "dotenv";
+import bodyParser from "body-parser";
+import path from "path";
+import fs from "fs";
+import comfyICURoutes from "./routes/comfyICU.routes";
 
-dotenv.config();
+// Load environment variables
+const envFile =
+  process.env.NODE_ENV === "production" ? ".env.production" : ".env.local";
+console.log(`Loading environment from ${envFile}`);
+dotenv.config({ path: envFile });
 
+// Fallback to .env if specific env file not found
+if (!process.env.PORT) {
+  console.log("Specific env file not found or missing PORT, loading from .env");
+  dotenv.config();
+}
+
+// Create Express app
 const app = express();
+const PORT = process.env.PORT || 3000;
 
-const port = process.env.PORT || 3000;
-app.use(bodyParser.json());
+// Middleware
 app.use(cors());
+app.use(bodyParser.json({ limit: "50mb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
 
-app.use(apiKeyAuth);
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(process.cwd(), "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  console.log(`Creating uploads directory at: ${uploadsDir}`);
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
-applyRoutes(app);
+// Serve static files from uploads directory
+app.use("/uploads", express.static(uploadsDir));
 
-app.get("/", async (req: Request, res: Response) => {
-  try {
-    res.send(`👋 Hello from aiHelpers!`);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Error while connecting to the database");
-  }
+// Routes
+app.use("/comfyicu", comfyICURoutes);
+
+// Root route
+app.get("/", (req, res) => {
+  res.send({
+    status: "success",
+    message: "aiHelpers API is running",
+    env: process.env.NODE_ENV || "development",
+    uploadsDirExists: fs.existsSync(uploadsDir),
+    comfyIcuConfigured: !!process.env.COMFYICU_API_KEY,
+  });
 });
 
-app.listen(port, async () => {
-  console.log(`Example app listening at http://localhost:${port}`);
+// Start server
+app.listen(PORT, () => {
+  console.log(`⚡️ Server is running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+  console.log(`Uploads directory: ${uploadsDir}`);
+  console.log(
+    `ComfyICU API URL: ${process.env.COMFYICU_API_URL || "Not set (using default)"}`
+  );
+  console.log(
+    `ComfyICU API Key: ${process.env.COMFYICU_API_KEY ? "Set (not shown)" : "NOT SET (this is required)"}`
+  );
 });

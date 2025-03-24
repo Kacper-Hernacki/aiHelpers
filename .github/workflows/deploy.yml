@@ -49,6 +49,7 @@ jobs:
               -e NODE_ENV=production \
               -e API_KEY=${{ secrets.API_KEY }} \
               -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
+              -e COMFYICU_API_KEY=${{ secrets.COMFYICU_API_KEY }} \
               --restart unless-stopped \
               ghcr.io/kacper-hernacki/aihelpers:latest
 
