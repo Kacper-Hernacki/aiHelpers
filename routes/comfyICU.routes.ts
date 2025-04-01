@@ -70,6 +70,7 @@ router.post("/face-swap", comfyICUController.faceSwap);
 router.post(
   "/face-swap-upload",
   upload.single("face_image"),
+
   comfyICUController.faceSwapUpload
 );
 

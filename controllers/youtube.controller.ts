@@ -8,6 +8,7 @@ export const youtubeController = {
   ): Promise<void> => {
     try {
       const { url, language } = req.body;
+      console.log("url", url);
       const response = await transcriptYoutubeVideo(url, language);
 
       res.status(201).json({ status: "success", response });

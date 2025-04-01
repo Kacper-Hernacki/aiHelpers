@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import bodyParser from "body-parser";
 import path from "path";
 import fs from "fs";
-import comfyICURoutes from "./routes/comfyICU.routes";
+import configureRoutes from "./routes";
 
 // Load environment variables
 const envFile =
@@ -37,8 +37,8 @@ if (!fs.existsSync(uploadsDir)) {
 // Serve static files from uploads directory
 app.use("/uploads", express.static(uploadsDir));
 
-// Routes
-app.use("/comfyicu", comfyICURoutes);
+// Configure all routes
+configureRoutes(app);
 
 // Root route
 app.get("/", (req, res) => {
@@ -57,9 +57,15 @@ app.listen(PORT, () => {
   console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
   console.log(`Uploads directory: ${uploadsDir}`);
   console.log(
-    `ComfyICU API URL: ${process.env.COMFYICU_API_URL || "Not set (using default)"}`
+    `ComfyICU API URL: ${
+      process.env.COMFYICU_API_URL || "Not set (using default)"
+    }`
   );
   console.log(
-    `ComfyICU API Key: ${process.env.COMFYICU_API_KEY ? "Set (not shown)" : "NOT SET (this is required)"}`
+    `ComfyICU API Key: ${
+      process.env.COMFYICU_API_KEY
+        ? "Set (not shown)"
+        : "NOT SET (this is required)"
+    }`
   );
 });

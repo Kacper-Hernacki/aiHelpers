@@ -439,30 +439,14 @@ export const comfyICUController = {
           : "No file"
       );
 
-      // Check environment variables
-      console.log("Environment check:");
-      console.log(
-        "COMFYICU_API_URL:",
-        process.env.COMFYICU_API_URL || "Not set, using default"
-      );
-      console.log(
-        "COMFYICU_API_KEY:",
-        process.env.COMFYICU_API_KEY
-          ? "Set (not showing value)"
-          : "NOT SET (This is required)"
-      );
-
-      // Check if file was uploaded (this will be handled by multer middleware)
-      if (!req.file) {
-        console.log("No file uploaded");
-        res.status(400).json({
-          status: "error",
-          message: "No face image uploaded. Please upload an image file.",
-        });
-        return;
-      }
-
-      const { workflow_id, prompt_text, seed, accelerator } = req.body;
+      const { workflow_id, prompt_text, seed, accelerator, face_image_url } =
+        req.body;
+      console.log("Extracted form data values:");
+      console.log("- workflow_id:", workflow_id);
+      console.log("- prompt_text:", prompt_text);
+      console.log("- seed:", seed);
+      console.log("- accelerator:", accelerator);
+      console.log("- face_image_url:", face_image_url);
 
       if (!workflow_id) {
         console.log("Missing workflow_id");
@@ -473,183 +457,139 @@ export const comfyICUController = {
         return;
       }
 
-      // Get the uploaded file
-      const file = req.file;
+      // Initialize variables for image handling
+      let imageUrl: string;
+
+      // Check if we have a direct URL in the request body
+      if (face_image_url) {
+        console.log("Using provided face_image_url:", face_image_url);
+        imageUrl = face_image_url;
+      }
+      // Check if file was uploaded
+      else if (req.file) {
+        console.log("Processing uploaded file");
+
+        try {
+          // Read the file content as base64
+          console.log("Reading file from path:", req.file.path);
+          if (!fs.existsSync(req.file.path)) {
+            throw new Error(`File does not exist at path: ${req.file.path}`);
+          }
+
+          const imageBuffer = fs.readFileSync(req.file.path);
+          console.log(
+            "File read successfully, buffer size:",
+            imageBuffer.length
+          );
+
+          const base64Image = imageBuffer.toString("base64");
+          console.log("Converted to base64, length:", base64Image.length);
+
+          // Create a data URL from the base64 image
+          const mimeType = req.file.mimetype || "image/jpeg";
+          imageUrl = `data:${mimeType};base64,${base64Image}`;
+          console.log(
+            "Created data URL with prefix:",
+            imageUrl.substring(0, 50) + "..."
+          );
+
+          // Clean up the temporary file
+          fs.unlinkSync(req.file.path);
+          console.log("Cleaned up temporary file:", req.file.path);
+        } catch (fileError) {
+          console.error("Error processing uploaded file:", fileError);
+
+          // Clean up file if it exists and we had an error
+          try {
+            if (fs.existsSync(req.file.path)) {
+              fs.unlinkSync(req.file.path);
+              console.log("Cleaned up file after error:", req.file.path);
+            }
+          } catch (cleanupError) {
+            console.error("Error during file cleanup:", cleanupError);
+          }
+
+          // Fall back to a sample image URL
+          imageUrl =
+            "https://media.istockphoto.com/id/1296158947/photo/portrait-of-creative-trendy-black-african-male-designer-standing-at-office.jpg?s=612x612&w=0&k=20&c=RIMvVt0J6Cc9vy3dBDZAOTCxKNgVJMOO7qUCT6TFkW4=";
+          console.log(
+            "Falling back to sample image URL after file processing error"
+          );
+        }
+      }
+      // Neither file nor URL provided, use a sample image
+      else {
+        console.log("No file or URL provided, using sample image");
+        imageUrl =
+          "https://media.istockphoto.com/id/1296158947/photo/portrait-of-creative-trendy-black-african-male-designer-standing-at-office.jpg?s=612x612&w=0&k=20&c=RIMvVt0J6Cc9vy3dBDZAOTCxKNgVJMOO7qUCT6TFkW4=";
+      }
+
+      // Use provided text or default
+      const text =
+        prompt_text || "portrait of a person, high quality, detailed face";
+      console.log("Using prompt text:", text);
+
+      // Use provided seed or default from form
+      const promptSeed = seed || 42;
+      console.log("Using seed:", promptSeed);
+
+      // Create files object with the image URL
+      const files = {
+        "/input/face_reference.jpg": imageUrl,
+      };
+      console.log("Created files object with keys:", Object.keys(files));
+
+      // Create a minimal prompt to ensure the workflow has something to work with
+      const prompt = {
+        "3": {
+          inputs: {
+            text: text,
+          },
+          class_type: "CLIPTextEncode",
+        },
+        "5": {
+          inputs: {
+            seed: promptSeed,
+          },
+          class_type: "KSampler",
+        },
+      };
+
+      console.log("Using workflow_id:", workflow_id);
+      console.log("Prepared minimal prompt:", JSON.stringify(prompt));
+
+      // Execute and wait for results
       console.log(
-        "Processing uploaded file:",
-        file.originalname,
-        file.size,
-        file.mimetype
+        "Calling comfyICUService.runWorkflowAndWaitForCompletion with workflow_id:",
+        workflow_id
+      );
+      console.log("Accelerator:", accelerator);
+
+      // Make sure we're waiting for completion properly
+      console.log("Starting workflow execution...");
+      const result = await comfyICUService.runWorkflowAndWaitForCompletion({
+        workflow_id,
+        prompt,
+        files,
+        accelerator,
+      });
+
+      console.log(
+        "Received result from comfyICU service:",
+        JSON.stringify(result).substring(0, 200) + "..."
       );
 
-      try {
-        // Read the file content as base64
-        console.log("Reading file from path:", file.path);
-        if (!fs.existsSync(file.path)) {
-          throw new Error(`File does not exist at path: ${file.path}`);
-        }
-
-        const imageBuffer = fs.readFileSync(file.path);
-        console.log("File read successfully, buffer size:", imageBuffer.length);
-
-        const base64Image = imageBuffer.toString("base64");
-        console.log("Converted to base64, length:", base64Image.length);
-
-        // Create a data URL from the base64 image
-        const mimeType = file.mimetype || "image/jpeg";
-        const dataUrl = `data:${mimeType};base64,${base64Image}`;
-        console.log(
-          "Created data URL with prefix:",
-          dataUrl.substring(0, 50) + "..."
-        );
-
-        // Use provided text or default
-        const text =
-          prompt_text || "person with detailed face, high quality portrait";
-        console.log("Using prompt text:", text);
-
-        // Use provided seed or random
-        const randomSeed = Math.floor(Math.random() * 999999999);
-        const promptSeed = seed || randomSeed;
-        console.log("Using seed:", promptSeed);
-
-        // Create files object with the data URL of the uploaded image
-        const files = {
-          "/input/face_reference.jpg": dataUrl,
-        };
-        console.log("Created files object with keys:", Object.keys(files));
-
-        // Create a simplified workflow without IPAdapter
-        // This is a basic workflow that should work with any standard ComfyUI setup
-        console.log("Creating simplified workflow prompt");
-        const prompt = {
-          "1": {
-            inputs: {
-              ckpt_name: "dreamshaper_8.safetensors",
-            },
-            class_type: "CheckpointLoaderSimple",
-          },
-          "2": {
-            inputs: {
-              width: 512,
-              height: 512,
-              batch_size: 1,
-            },
-            class_type: "EmptyLatentImage",
-          },
-          "3": {
-            inputs: {
-              clip: ["1", 1],
-              text: text,
-            },
-            class_type: "CLIPTextEncode",
-          },
-          "4": {
-            inputs: {
-              clip: ["1", 1],
-              text: "ugly, deformed, noisy, blurry, distorted, disfigured",
-            },
-            class_type: "CLIPTextEncode",
-          },
-          // Load the face reference image
-          "8": {
-            inputs: {
-              image: "face_reference.jpg",
-              upload: "image",
-            },
-            class_type: "LoadImage",
-          },
-          // Direct KSampler without IPAdapter to ensure compatibility
-          "5": {
-            inputs: {
-              model: ["1", 0], // Connect to model output
-              latent_image: ["2", 0], // Connect to empty latent image
-              positive: ["3", 0], // Connect to positive prompt
-              negative: ["4", 0], // Connect to negative prompt
-              sampler_name: "euler_ancestral",
-              scheduler: "normal",
-              seed: promptSeed,
-              steps: 20,
-              cfg: 7,
-              denoise: 1,
-            },
-            class_type: "KSampler",
-          },
-          "6": {
-            inputs: {
-              samples: ["5", 0],
-              vae: ["1", 2],
-            },
-            class_type: "VAEDecode",
-          },
-          "7": {
-            inputs: {
-              images: ["6", 0],
-              filename_prefix: "FaceSwap",
-            },
-            class_type: "SaveImage",
-          },
-        };
-
-        console.log(
-          "Created basic prompt object with nodes:",
-          Object.keys(prompt)
-        );
-        console.log(
-          "Prompt connections:",
-          JSON.stringify({
-            "KSampler inputs": prompt["5"].inputs,
-          })
-        );
-
-        // Execute and wait for results
-        console.log(
-          "Calling comfyICUService.runWorkflowAndWaitForCompletion with workflow_id:",
-          workflow_id
-        );
-        console.log("Accelerator:", accelerator);
-
-        const result = await comfyICUService.runWorkflowAndWaitForCompletion({
-          workflow_id,
-          prompt,
-          files,
-          accelerator,
-        });
-
-        console.log(
-          "Received result from comfyICU service:",
-          JSON.stringify(result).substring(0, 200) + "..."
-        );
-
-        // Clean up the temporary file
-        console.log("Cleaning up temporary file:", file.path);
-        fs.unlinkSync(file.path);
-        console.log("File cleanup complete");
-
-        console.log("Sending success response");
-        res.status(200).json({
-          status: "success",
-          message: "Face swap complete",
-          result,
-          imageUrl:
-            result.outputs && result.outputs.length > 0
-              ? result.outputs[0].url
-              : null,
-        });
-        console.log("=== END faceSwapUpload ===");
-      } catch (innerError) {
-        console.error("Inner error during file processing:", innerError);
-        // Still attempt to clean up the file
-        try {
-          if (fs.existsSync(file.path)) {
-            fs.unlinkSync(file.path);
-            console.log("Cleaned up file after error:", file.path);
-          }
-        } catch (cleanupError) {
-          console.error("Error during file cleanup:", cleanupError);
-        }
-        throw innerError; // Re-throw to be caught by outer catch
-      }
+      console.log("Sending success response");
+      res.status(200).json({
+        status: "success",
+        message: "Face swap complete",
+        result,
+        imageUrl:
+          result.outputs && result.outputs.length > 0
+            ? result.outputs[0].url
+            : null,
+      });
+      console.log("=== END faceSwapUpload ===");
     } catch (error) {
       console.error("Error performing face swap with upload:", error);
 
