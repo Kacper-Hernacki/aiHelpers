@@ -17,13 +17,17 @@ export async function transcriptYoutubeVideo(
       addVideoInfo: true,
     });
     const docs = await loader.load();
-    console.log(docs);
+
+    // Extract video ID from URL if not available in metadata
+    const videoId =
+      docs[0].metadata.source || url.split("v=")[1]?.split("&")[0] || url;
+
     return {
       transcript: docs[0].pageContent,
-      title: docs[0].metadata.title,
-      author: docs[0].metadata.author,
+      title: docs[0].metadata.title || "Untitled Video",
+      author: docs[0].metadata.author || "Unknown Author",
       url: url,
-      id: docs[0].metadata.source,
+      id: videoId,
     };
   } catch (error) {
     throw error;

@@ -29,7 +29,7 @@
     "node-fetch": "^2.7.0",
     "serpapi": "^2.1.0",
     "tesseract.js": "^6.0.0",
-    "youtubei.js": "^13.0.0"
+    "youtubei.js": "^13.3.0"
   },
   "scripts": {
     "start": "bun index.ts"
