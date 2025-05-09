@@ -1,0 +1,23 @@
+{"level":"debug","message":"DO_SPACES_ENDPOINT is set","service":"upload-service","timestamp":"2025-05-09 18:31:33"}
+{"level":"debug","message":"DO_SPACES_REGION is set","service":"upload-service","timestamp":"2025-05-09 18:31:33"}
+{"level":"debug","message":"DO_SPACES_ACCESS_KEY is set","service":"upload-service","timestamp":"2025-05-09 18:31:33"}
+{"level":"debug","message":"DO_SPACES_SECRET_KEY is set","service":"upload-service","timestamp":"2025-05-09 18:31:33"}
+{"level":"debug","message":"DO_SPACES_BUCKET is set","service":"upload-service","timestamp":"2025-05-09 18:31:33"}
+{"level":"info","message":"Upload request received","service":"upload-service","timestamp":"2025-05-09 18:31:35"}
+{"level":"debug","message":"Received file: Screenshot 2025-05-06 at 07.50.51.png, mimetype: image/png","service":"upload-service","timestamp":"2025-05-09 18:31:35"}
+{"level":"debug","message":"File type accepted: image/png","service":"upload-service","timestamp":"2025-05-09 18:31:35"}
+{"level":"debug","message":"Setting upload directory to: /Users/kacperhernacki/Desktop/01 Projects/aiAdaptiv/uploads","service":"upload-service","timestamp":"2025-05-09 18:31:35"}
+{"level":"debug","message":"Generated filename: 1746808295851-4ba50a6d-2f56-4187-a0cb-e1cc38cc7247.png","service":"upload-service","timestamp":"2025-05-09 18:31:35"}
+{"DO_SPACES_ACCESS_KEY":"SET (hidden)","DO_SPACES_BUCKET":"aiadaptiv","DO_SPACES_ENDPOINT":"fra1.digitaloceanspaces.com","DO_SPACES_REGION":"fra1","DO_SPACES_SECRET_KEY":"SET (hidden)","level":"debug","message":"Environment variables check","service":"upload-service","timestamp":"2025-05-09 18:34:45"}
+{"level":"debug","message":"S3 client initialized successfully","service":"upload-service","timestamp":"2025-05-09 18:34:45"}
+{"level":"debug","message":"Setting upload directory to: /Users/kacperhernacki/Desktop/01 Projects/aiAdaptiv/uploads","service":"upload-service","timestamp":"2025-05-09 18:34:45"}
+{"level":"debug","message":"Upload directory already exists","service":"upload-service","timestamp":"2025-05-09 18:34:45"}
+{"level":"debug","message":"Write permissions confirmed for upload directory","service":"upload-service","timestamp":"2025-05-09 18:34:45"}
+{"level":"info","message":"Upload request received","service":"upload-service","timestamp":"2025-05-09 18:34:47"}
+{"contentLength":"211106","contentType":"multipart/form-data; boundary=--------------------------243329423875740119259497","level":"debug","message":"Request headers","service":"upload-service","timestamp":"2025-05-09 18:34:47"}
+{"level":"debug","message":"Starting multer middleware processing","service":"upload-service","timestamp":"2025-05-09 18:34:47"}
+{"level":"debug","message":"Filtering file: Screenshot 2025-05-06 at 07.50.51.png, mimetype: image/png","service":"upload-service","timestamp":"2025-05-09 18:34:47"}
+{"level":"debug","message":"File type accepted: image/png","service":"upload-service","timestamp":"2025-05-09 18:34:47"}
+{"level":"debug","message":"Setting destination for file: Screenshot 2025-05-06 at 07.50.51.png","service":"upload-service","timestamp":"2025-05-09 18:34:47"}
+{"level":"debug","message":"Generated filename: 1746808487610-ea2242ec-4894-4f46-8898-060d1629eb06.png","service":"upload-service","timestamp":"2025-05-09 18:34:47"}
+{"level":"debug","message":"Destination set successfully for file: Screenshot 2025-05-06 at 07.50.51.png","service":"upload-service","timestamp":"2025-05-09 18:34:47"}
