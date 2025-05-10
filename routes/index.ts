@@ -6,6 +6,7 @@ import flightsRoutes from "./flights.routes";
 import notionRoutes from "./notion.routes";
 import comfyICURoutes from "./comfyICU.routes";
 import fileUploadRoutes from "./fileUpload.routes";
+import imageAnalysisRoutes from "./imageAnalysis.routes";
 
 export default (app: Express) => {
   app.use("/youtube", youtubeRoutes);
@@ -15,4 +16,5 @@ export default (app: Express) => {
   app.use("/notion", notionRoutes);
   app.use("/comfyicu", comfyICURoutes);
   app.use("/file", fileUploadRoutes);
+  app.use("/image", imageAnalysisRoutes);
 };
