@@ -173,3 +173,83 @@ function getContentType(filename: string): string {
   };
   return contentTypes[ext] || 'application/octet-stream';
 }
+
+/**
+ * Get file information from Digital Ocean Spaces
+ * Endpoint: GET /api/file/info/:filename
+ */
+export const getFile = (req: Request, res: Response) => {
+  try {
+    const { filename } = req.params;
+    
+    if (!filename) {
+      return res.status(400).json({
+        success: false,
+        message: "Filename is required"
+      });
+    }
+    
+    debug(`Getting file info for: ${filename}`);
+    
+    // Configure AWS SDK v2 for Digital Ocean Spaces
+    const spacesEndpoint = new AWS.Endpoint(SPACES_ENDPOINT);
+    const s3 = new AWS.S3({
+      endpoint: spacesEndpoint,
+      accessKeyId: process.env.DO_SPACES_ACCESS_KEY,
+      secretAccessKey: process.env.DO_SPACES_SECRET_KEY,
+      region: REGION,
+      signatureVersion: 'v4'
+    });
+    
+    // Look for the exact filename first
+    let fileKey = filename;
+    
+    // Set up the parameters for headObject request
+    const params = {
+      Bucket: BUCKET_NAME,
+      Key: fileKey
+    };
+    
+    debug('Checking file existence with params:', JSON.stringify(params));
+    
+    // Check if file exists and get its metadata
+    s3.headObject(params, (err, data) => {
+      if (err) {
+        debug('Error getting file info:', err.message);
+        return res.status(404).json({
+          success: false,
+          message: `File not found: ${filename}`,
+          error: err.message
+        });
+      }
+      
+      // Generate URLs for the file
+      const spaces_url = `https://${BUCKET_NAME}.${SPACES_ENDPOINT}/${fileKey}`;
+      const cdn_url = `https://${BUCKET_NAME}.${REGION}.cdn.digitaloceanspaces.com/${fileKey}`;
+      
+      debug('File found in bucket, returning info');
+      
+      // Return file information
+      return res.status(200).json({
+        success: true,
+        message: "File found",
+        data: {
+          filename: fileKey,
+          contentType: data.ContentType,
+          size: data.ContentLength,
+          lastModified: data.LastModified,
+          etag: data.ETag,
+          url: cdn_url,
+          originUrl: spaces_url,
+          metadata: data.Metadata || {}
+        }
+      });
+    });
+  } catch (error: any) {
+    debug('Unexpected error in getFile:', error);
+    return res.status(500).json({
+      success: false,
+      message: `Server error: ${error.message}`
+    });
+  }
+};
