@@ -253,3 +253,81 @@ export const getFile = (req: Request, res: Response) => {
     });
   }
 };
+
+/**
+ * Download a file directly from Digital Ocean Spaces
+ * Endpoint: GET /api/file/download/:filename
+ */
+export const downloadFile = (req: Request, res: Response) => {
+  try {
+    const { filename } = req.params;
+    
+    if (!filename) {
+      return res.status(400).json({
+        success: false,
+        message: "Filename is required"
+      });
+    }
+    
+    debug(`Preparing to download file: ${filename}`);
+    
+    // Configure AWS SDK v2 for Digital Ocean Spaces
+    const spacesEndpoint = new AWS.Endpoint(SPACES_ENDPOINT);
+    const s3 = new AWS.S3({
+      endpoint: spacesEndpoint,
+      accessKeyId: process.env.DO_SPACES_ACCESS_KEY,
+      secretAccessKey: process.env.DO_SPACES_SECRET_KEY,
+      region: REGION,
+      signatureVersion: 'v4'
+    });
+    
+    // Set up the parameters for getObject request
+    const params = {
+      Bucket: BUCKET_NAME,
+      Key: filename
+    };
+    
+    debug('Requesting file download with params:', JSON.stringify(params));
+    
+    // Get the file data
+    s3.getObject(params, (err, data) => {
+      if (err) {
+        debug('Error downloading file:', err.message);
+        return res.status(404).json({
+          success: false,
+          message: `File not found: ${filename}`,
+          error: err.message
+        });
+      }
+      
+      // Determine content type
+      const contentType = data.ContentType || getContentType(filename);
+      
+      // Set appropriate headers for download
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      
+      if (data.ContentLength) {
+        res.setHeader('Content-Length', data.ContentLength);
+      }
+      
+      debug(`Sending file: ${filename}, Content-Type: ${contentType}`);
+      
+      // Send the file data
+      if (data.Body) {
+        return res.status(200).send(data.Body);
+      } else {
+        return res.status(500).json({
+          success: false,
+          message: "File data is empty"
+        });
+      }
+    });
+  } catch (error: any) {
+    debug('Unexpected error in downloadFile:', error);
+    return res.status(500).json({
+      success: false,
+      message: `Server error: ${error.message}`
+    });
+  }
+};

@@ -1,5 +1,5 @@
 import express from "express";
-import { uploadFile, getFile } from "../controllers/fileUpload.controller";
+import { uploadFile, getFile, downloadFile } from "../controllers/fileUpload.controller";
 import { Request, Response, NextFunction } from "express";
 
 const router = express.Router();
@@ -20,5 +20,8 @@ router.post("/upload", asyncHandler(uploadFile));
 // Add endpoint to get file information by filename
 // Moving this to a more specific route to avoid conflicts
 router.get("/info/:filename", asyncHandler(getFile));
+
+// Add endpoint to download files directly
+router.get("/download/:filename", asyncHandler(downloadFile));
 
 export default router;
