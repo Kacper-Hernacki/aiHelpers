@@ -1,7 +1,0 @@
-{"level":"error","message":"No file uploaded"}
-{"level":"info","message":"Uploading file: Screenshot 2025-05-06 at 07.50.51.png to DO Spaces"}
-{"level":"error","message":"Error uploading file: Type error"}
-{"level":"info","message":"Request received for file upload: {\"headers\":\"multipart/form-data; boundary=--------------------------602125853814266570199948\",\"body\":[],\"file\":\"missing\"}"}
-{"level":"error","message":"No file uploaded"}
-{"level":"info","message":"Request received for file upload: {\"headers\":\"multipart/form-data; boundary=--------------------------029641454720153132461028\",\"body\":[],\"file\":\"missing\"}"}
-{"level":"error","message":"No file uploaded"}
