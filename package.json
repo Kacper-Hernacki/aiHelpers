@@ -15,20 +15,25 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.804.0",
     "@langchain/community": "^0.3.32",
     "@langchain/core": "^0.3.40",
     "@notionhq/client": "^2.2.16",
     "@prisma/client": "^6.4.1",
+    "@types/busboy": "^1.5.4",
+    "aws-sdk": "2",
     "axios": "^1.7.9",
     "body-parser": "^1.20.3",
+    "busboy": "^1.6.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
-    "multer": "^1.4.5-lts.1",
+    "multer": "^1.4.5-lts.2",
     "node-fetch": "^2.7.0",
     "serpapi": "^2.1.0",
     "tesseract.js": "^6.0.0",
+    "winston": "^3.17.0",
     "youtubei.js": "^13.3.0"
   },
   "scripts": {

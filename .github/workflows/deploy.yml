@@ -50,6 +50,11 @@ jobs:
               -e API_KEY=${{ secrets.API_KEY }} \
               -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
               -e COMFYICU_API_KEY=${{ secrets.COMFYICU_API_KEY }} \
+              -e DO_SPACES_ENDPOINT=${{ secrets.DO_SPACES_ENDPOINT }} \
+              -e DO_SPACES_REGION=${{ secrets.DO_SPACES_REGION }} \
+              -e DO_SPACES_ACCESS_KEY=${{ secrets.DO_SPACES_ACCESS_KEY }} \
+              -e DO_SPACES_SECRET_KEY=${{ secrets.DO_SPACES_SECRET_KEY }} \
+              -e DO_SPACES_BUCKET=${{ secrets.DO_SPACES_BUCKET }} \
               --restart unless-stopped \
               ghcr.io/kacper-hernacki/aihelpers:latest
 
