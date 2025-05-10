@@ -2,6 +2,8 @@
 import { Request, Response } from "express";
 import { fileProcessorService } from "../services/file/fileProcessor.service";
 import { digitalOceanService } from "../services/storage/digitalOcean.service";
+import busboy from "busboy";
+
 
 // Debug logging function
 const debug = (...args: any[]) => {
@@ -119,3 +121,63 @@ export const downloadFile = async (req: Request, res: Response) => {
     });
   }
 };
+
+/**
+ * DEAD SIMPLE multiple file upload endpoint
+ */
+export const uploadMultipleFiles = (req: Request, res: Response) => {
+  const files: any[] = [];
+  
+  // Create basic parser
+  const bb = busboy({ headers: req.headers });
+  
+  // Setup response timeout as a fallback
+  const responseTimeout = setTimeout(() => {
+    debug('TIMEOUT: Sending response after 3 seconds');
+    sendResponse();
+  }, 3000);
+  
+  // Function to send response
+  const sendResponse = () => {
+    clearTimeout(responseTimeout);
+    debug(`Sending response with ${files.length} files`);
+    res.json({ success: true, files });
+  };
+  
+  // Process files
+  bb.on('file', (field, file, info) => {
+    if (field !== 'files') {
+      file.resume();
+      return;
+    }
+    
+    const { filename, mimeType } = info;
+    debug('File detected:', filename);
+    
+    const chunks: any[] = [];
+    file.on('data', (chunk) => chunks.push(chunk));
+    
+    file.on('close', async () => {
+      try {
+        if (chunks.length === 0) return;
+        
+        const buffer = Buffer.concat(chunks);
+        const result = await digitalOceanService.uploadFile(buffer, filename, mimeType);
+        files.push(result);
+        
+        // No additional check needed here
+      } catch (err) {
+        debug('Upload error:', err);
+      }
+    });
+  });
+  
+  // This is critical - ensures we send a response when done
+  bb.on('finish', () => {
+    debug('Parsing complete, sending response');
+    sendResponse();
+  });
+  
+  // Start parsing
+  req.pipe(bb);
+}

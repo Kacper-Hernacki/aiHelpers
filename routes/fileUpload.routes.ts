@@ -1,5 +1,5 @@
 import express from "express";
-import { uploadFile, getFile, downloadFile } from "../controllers/fileUpload.controller";
+import { uploadFile, getFile, downloadFile, uploadMultipleFiles } from "../controllers/fileUpload.controller";
 import { Request, Response, NextFunction } from "express";
 
 const router = express.Router();
@@ -23,5 +23,8 @@ router.get("/info/:filename", asyncHandler(getFile));
 
 // Add endpoint to download files directly
 router.get("/download/:filename", asyncHandler(downloadFile));
+
+// Add endpoint for uploading multiple files at once
+router.post("/upload-multiple", asyncHandler(uploadMultipleFiles));
 
 export default router;
