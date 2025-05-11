@@ -155,7 +155,8 @@ This section describes all available API endpoints in the aiHelpers service.
 - **Endpoint**: `POST /image/analyze-multiple-images`
 - **Content-Type**: `multipart/form-data`
 - **Request Body**: 
-  - `images`: Multiple image files to analyze (use the same field name for all files)
+  - `images` or `files`: Multiple image files to analyze (use the same field name for all files)
+  - **Note**: For compatibility with other endpoints, both field names `images` and `files` are supported
 - **Response**: 
   ```json
   {

@@ -55,7 +55,7 @@ export const multipleImageAnalysisService = {
           if (imageBuffers.length === 0) {
             return res.status(400).json({
               status: "error",
-              message: `No valid images were uploaded with field name '${fieldName}'`
+              message: `No valid images were uploaded with field name '${fieldName}' or 'files'`
             });
           }
           
@@ -125,8 +125,9 @@ export const multipleImageAnalysisService = {
       
       // Process each file
       bb.on('file', (field: string, file: any, info: any) => {
-        // Only process specified field
-        if (field !== fieldName) {
+        // Check if field matches the specified field name OR 'files' (for compatibility with existing endpoints)
+        if (field !== fieldName && field !== 'files') {
+          debug(`Skipping field: ${field}, expected ${fieldName} or 'files'`);
           file.resume();
           return;
         }
