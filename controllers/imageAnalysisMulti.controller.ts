@@ -29,11 +29,22 @@ export const analyzeMultipleImages = (req: Request, res: Response) => {
   const imageBuffers: {buffer: Buffer, mimeType: string, originalName: string, url: string}[] = [];
 
   // Create basic parser - EXACT same approach as the working multiple file upload
+  // Store request info for diagnostics
+  const diagnostics = {
+    contentType: req.headers['content-type'],
+    requestMethod: req.method,
+    receivedFields: Array<{fieldname: string, valueLength: number}>(),
+    receivedFileFields: Array<{fieldName: string, fileName: string, mimeType: string}>(),
+    fileBuffersLength: 0,
+    hasTimeout: false
+  };
+  
   const bb = busboy({ headers: req.headers });
 
   // Setup response timeout as a fallback
   const responseTimeout = setTimeout(() => {
     debug('TIMEOUT: Sending response after 15 seconds');
+    diagnostics.hasTimeout = true;
     processAndSendResponse();
   }, 15000);
 
@@ -42,10 +53,23 @@ export const analyzeMultipleImages = (req: Request, res: Response) => {
     clearTimeout(responseTimeout);
 
     try {
+      // Track how many buffers we have for diagnostics
+      diagnostics.fileBuffersLength = imageBuffers.length;
+      
       if (imageBuffers.length === 0) {
         return res.status(400).json({
           status: "error",
-          message: "No valid images were uploaded"
+          message: "No valid images were uploaded",
+          diagnostics: {
+            ...diagnostics,
+            requestHeaders: {
+              contentType: req.headers['content-type'],
+              contentLength: req.headers['content-length'],
+              host: req.headers.host,
+              userAgent: req.headers['user-agent']
+            },
+            additionalInfo: "Please ensure you're uploading image files with a field name that's detected by the server"
+          }
         });
       }
 
@@ -115,6 +139,12 @@ export const analyzeMultipleImages = (req: Request, res: Response) => {
 
   // Process each file - ACCEPT ANY FIELD NAME (this is key for compatibility)
   bb.on('file', (field: string, file: any, info: any) => {
+    // Track received file fields for diagnostics
+    diagnostics.receivedFileFields.push({
+      fieldName: field,
+      fileName: info.filename,
+      mimeType: info.mimeType
+    });
     const { filename, mimeType } = info;
 
     // Validate mime type
@@ -152,6 +182,11 @@ export const analyzeMultipleImages = (req: Request, res: Response) => {
     });
   });
 
+  // Track any form fields too (not files)
+  bb.on('field', (fieldname: string, value: string) => {
+    diagnostics.receivedFields.push({ fieldname, valueLength: value.length });
+  });
+  
   // This is CRITICAL - ensures we send a response when done
   bb.on('finish', () => {
     debug('Form parsing complete, starting analysis');
