@@ -76,6 +76,37 @@ This section describes all available API endpoints in the aiHelpers service.
   ```
 - **Description**: Uploads a file to Digital Ocean Spaces storage and returns URLs to access it.
 
+#### Upload Multiple Files
+- **Endpoint**: `POST /file/upload-multiple`
+- **Content-Type**: `multipart/form-data`
+- **Request Body**: 
+  - `files`: Multiple files to upload (use the same field name for all files)
+- **Response**: 
+  ```json
+  {
+    "success": true,
+    "files": [
+      {
+        "url": "https://bucket-name.region.cdn.digitaloceanspaces.com/filename1.ext",
+        "originUrl": "https://bucket-name.endpoint/filename1.ext",
+        "filename": "unique-filename1.ext",
+        "originalName": "original-filename1.ext",
+        "size": 12345,
+        "etag": "etag-value1"
+      },
+      {
+        "url": "https://bucket-name.region.cdn.digitaloceanspaces.com/filename2.ext",
+        "originUrl": "https://bucket-name.endpoint/filename2.ext",
+        "filename": "unique-filename2.ext",
+        "originalName": "original-filename2.ext",
+        "size": 67890,
+        "etag": "etag-value2"
+      }
+    ]
+  }
+  ```
+- **Description**: Uploads multiple files to Digital Ocean Spaces storage in a single request and returns URLs to access them. Use the same field name `files` for all files in the form-data request.
+
 #### Get File Information
 - **Endpoint**: `GET /file/info/:filename`
 - **URL Parameters**: 
