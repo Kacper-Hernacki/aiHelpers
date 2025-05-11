@@ -151,6 +151,50 @@ This section describes all available API endpoints in the aiHelpers service.
   ```
 - **Description**: Uploads an image to Digital Ocean Spaces, analyzes it with OpenAI's GPT-4o model to extract text, identify the social media platform (if applicable), and provide a description.
 
+#### Analyze Multiple Images
+- **Endpoint**: `POST /image/analyze-multiple-images`
+- **Content-Type**: `multipart/form-data`
+- **Request Body**: 
+  - `images`: Multiple image files to analyze (use the same field name for all files)
+- **Response**: 
+  ```json
+  {
+    "status": "success",
+    "message": "3 images analyzed successfully",
+    "data": {
+      "files": [
+        {
+          "url": "https://bucket-name.region.cdn.digitaloceanspaces.com/filename1.ext",
+          "originUrl": "https://bucket-name.endpoint/filename1.ext",
+          "filename": "unique-filename1.ext",
+          "originalName": "original-filename1.ext",
+          "size": 12345,
+          "etag": "etag-value1"
+        },
+        { ... }
+      ],
+      "analysis": {
+        "individualResults": [
+          {
+            "fullAnalysis": "Complete analysis text for image 1",
+            "extractedText": "Text extracted from image 1",
+            "sourceIdentified": "LinkedIn",
+            "imageDescription": "Description of image 1",
+            "originalName": "filename1.ext",
+            "url": "https://bucket-name.region.cdn.digitaloceanspaces.com/filename1.ext"
+          },
+          { ... }
+        ],
+        "consolidated": {
+          "platform": "LinkedIn",
+          "extractedText": "Deduplicated text extracted from all images"
+        }
+      }
+    }
+  }
+  ```
+- **Description**: Uploads multiple images to Digital Ocean Spaces, analyzes each with OpenAI's GPT-4o model and consolidates the results. This endpoint is especially useful for analyzing multi-image screenshots of the same post (e.g., from LinkedIn) where text might be duplicated across images. The response includes individual analysis results for each image plus a consolidated result with deduplicated text.
+
 ### YouTube
 
 #### Get YouTube Transcript

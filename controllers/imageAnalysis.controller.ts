@@ -2,6 +2,7 @@
 import { Request, Response } from "express";
 import { openaiService } from "../services/openai/openai.service";
 import { fileProcessorService } from "../services/file/fileProcessor.service";
+import { multipleImageAnalysisService } from "../services/imageAnalysis/multipleImageAnalysis.service";
 import fetch from "node-fetch";
 
 // Debug logging function
@@ -12,6 +13,7 @@ const debug = (...args: any[]) => {
 // Define the controller type to avoid reference issues
 type ImageAnalysisController = {
   analyzeImage: (req: Request, res: Response) => void;
+  analyzeMultipleImages: (req: Request, res: Response) => void;
 };
 
 // Export with explicit type annotation
@@ -98,5 +100,17 @@ export const imageAnalysisController: ImageAnalysisController = {
         });
       }
     );
+  },
+  
+  /**
+   * Analyze multiple images and consolidate the results
+   * Endpoint: POST /api/image/analyze-multiple-images
+   * Useful for analyzing screenshots of the same post across multiple images
+   */
+  analyzeMultipleImages: (req: Request, res: Response) => {
+    debug("Starting multiple image analysis handler");
+    
+    // Use the new service to handle multiple image analysis
+    multipleImageAnalysisService.processMultipleImages(req, res, 'images');
   }
 };

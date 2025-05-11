@@ -17,4 +17,7 @@ const asyncHandler = (fn: Function) => (req: Request, res: Response, next: NextF
 // Add the image analysis endpoint (file handling is done inside the controller)
 router.post("/analyze-image", asyncHandler(imageAnalysisController.analyzeImage));
 
+// Add endpoint for analyzing multiple images simultaneously
+router.post("/analyze-multiple-images", asyncHandler(imageAnalysisController.analyzeMultipleImages));
+
 export default router;
