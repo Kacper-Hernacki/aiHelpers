@@ -27,6 +27,7 @@ export const analyzeMultipleImages = (req: Request, res: Response) => {
   // Variables to store our results
   const files: any[] = [];
   const imageBuffers: {buffer: Buffer, mimeType: string, originalName: string, url: string}[] = [];
+  const pendingFileUploads: Promise<void>[] = []; // Track pending upload promises
 
   // Create basic parser - EXACT same approach as the working multiple file upload
   // Store request info for diagnostics
@@ -160,25 +161,31 @@ export const analyzeMultipleImages = (req: Request, res: Response) => {
     const chunks: Buffer[] = [];
     file.on('data', (chunk: Buffer) => chunks.push(chunk));
 
-    file.on('close', async () => {
-      try {
-        if (chunks.length === 0) return;
+    file.on('close', () => {
+      // Instead of awaiting here, we'll create a promise and track it
+      if (chunks.length === 0) return;
+      
+      const filePromise = (async () => {
+        try {
+          const buffer = Buffer.concat(chunks);
+          const result = await digitalOceanService.uploadFile(buffer, filename, mimeType) as any;
+          files.push(result);
 
-        const buffer = Buffer.concat(chunks);
-        const result = await digitalOceanService.uploadFile(buffer, filename, mimeType) as any;
-        files.push(result);
-
-        // Store for analysis
-        imageBuffers.push({
-          buffer,
-          mimeType,
-          originalName: filename,
-          url: result.url
-        });
-
-      } catch (err: any) {
-        debug('Upload error:', err);
-      }
+          // Store for analysis
+          imageBuffers.push({
+            buffer,
+            mimeType,
+            originalName: filename,
+            url: result.url
+          });
+          debug(`Successfully processed file: ${filename}`);
+        } catch (err: any) {
+          debug('Upload error:', err);
+        }
+      })();
+      
+      // Track this promise to wait for it later
+      pendingFileUploads.push(filePromise);
     });
   });
 
@@ -189,8 +196,18 @@ export const analyzeMultipleImages = (req: Request, res: Response) => {
   
   // This is CRITICAL - ensures we send a response when done
   bb.on('finish', () => {
-    debug('Form parsing complete, starting analysis');
-    processAndSendResponse();
+    debug('Form parsing complete, waiting for file uploads to finish');
+    
+    // Wait for all pending file uploads to complete before analyzing
+    Promise.all(pendingFileUploads)
+      .then(() => {
+        debug(`All file uploads complete. Processing ${imageBuffers.length} images`);
+        processAndSendResponse();
+      })
+      .catch(err => {
+        debug('Error during file uploads:', err);
+        processAndSendResponse();
+      });
   });
 
   // Handle errors
