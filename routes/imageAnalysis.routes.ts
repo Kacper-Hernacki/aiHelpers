@@ -1,5 +1,6 @@
 import express from "express";
 import { imageAnalysisController } from "../controllers/imageAnalysis.controller";
+import { analyzeMultipleImages } from "../controllers/imageAnalysisMulti.controller";
 import { Request, Response, NextFunction } from "express";
 
 const router = express.Router();
@@ -18,6 +19,6 @@ const asyncHandler = (fn: Function) => (req: Request, res: Response, next: NextF
 router.post("/analyze-image", asyncHandler(imageAnalysisController.analyzeImage));
 
 // Add endpoint for analyzing multiple images simultaneously
-router.post("/analyze-multiple-images", asyncHandler(imageAnalysisController.analyzeMultipleImages));
+router.post("/analyze-multiple-images", asyncHandler(analyzeMultipleImages));
 
 export default router;
