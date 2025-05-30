@@ -7,6 +7,7 @@ import notionRoutes from "./notion.routes";
 import comfyICURoutes from "./comfyICU.routes";
 import fileUploadRoutes from "./fileUpload.routes";
 import imageAnalysisRoutes from "./imageAnalysis.routes";
+import templateGeneratorRoutes from "./templateGenerator.routes";
 
 export default (app: Express) => {
   app.use("/youtube", youtubeRoutes);
@@ -17,4 +18,5 @@ export default (app: Express) => {
   app.use("/comfyicu", comfyICURoutes);
   app.use("/file", fileUploadRoutes);
   app.use("/image", imageAnalysisRoutes);
+  app.use("/template", templateGeneratorRoutes);
 };
