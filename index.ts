@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import bodyParser from "body-parser";
 import path from "path";
 import fs from "fs";
-import configureRoutes from "./routes";
+import configureRoutes from "./routes/index.ts";
 
 // Load environment variables
 const envFile =

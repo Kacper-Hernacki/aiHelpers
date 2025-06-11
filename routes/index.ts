@@ -1,13 +1,14 @@
 import { Express } from "express";
-import youtubeRoutes from "./youtube.routes";
-import notesRoutes from "./notes.routes";
-import linkedinRoutes from "./linkedin.routes";
-import flightsRoutes from "./flights.routes";
-import notionRoutes from "./notion.routes";
-import comfyICURoutes from "./comfyICU.routes";
-import fileUploadRoutes from "./fileUpload.routes";
-import imageAnalysisRoutes from "./imageAnalysis.routes";
-import templateGeneratorRoutes from "./templateGenerator.routes";
+import youtubeRoutes from "./youtube.routes.ts";
+import notesRoutes from "./notes.routes.ts";
+import linkedinRoutes from "./linkedin.routes.ts";
+import flightsRoutes from "./flights.routes.ts";
+import notionRoutes from "./notion.routes.ts";
+import comfyICURoutes from "./comfyICU.routes.ts";
+import fileUploadRoutes from "./fileUpload.routes.ts";
+import imageAnalysisRoutes from "./imageAnalysis.routes.ts";
+import templateGeneratorRoutes from "./templateGenerator.routes.ts";
+import canvaTemplateRoutes from "./canvaTemplate.routes.ts";
 
 export default (app: Express) => {
   app.use("/youtube", youtubeRoutes);
@@ -19,4 +20,5 @@ export default (app: Express) => {
   app.use("/file", fileUploadRoutes);
   app.use("/image", imageAnalysisRoutes);
   app.use("/template", templateGeneratorRoutes);
+  app.use("/canva", canvaTemplateRoutes);
 };
