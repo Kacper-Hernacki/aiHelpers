@@ -22,14 +22,26 @@ export const socialCardTemplateService = {
       debug(`Creating social card with image: ${imageUrl}`);
       debug(`Title: ${title}`);
 
-      const width = 1200;
-      const height = 675;
+      const scaleFactor = 2;
+      const baseWidth = 1200;
+      const baseHeight = 675;
+      const width = baseWidth * scaleFactor;
+      const height = baseHeight * scaleFactor;
       const canvas = createCanvas(width, height);
       const ctx = canvas.getContext('2d');
+
+      // Set high-quality rendering options
+      ctx.quality = 'best';
+      ctx.patternQuality = 'best';
+      ctx.antialias = 'subpixel';
+      ctx.textDrawingMode = 'path';
 
       // Create a clean white background
       ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(0, 0, width, height);
+
+      // Scale all drawing operations
+      ctx.scale(scaleFactor, scaleFactor);
 
       // --- Background Decorative Elements ---
       const bgShape1 = await loadImage(path.join(process.cwd(), 'assets', 'bg', '1.png'));
@@ -40,8 +52,8 @@ export const socialCardTemplateService = {
       const bgScale = 8;
       ctx.globalAlpha = 0.8; // Increased alpha for better visibility
       ctx.drawImage(bgShape1, 40, 40, bgShape1.width / bgScale, bgShape1.height / bgScale); // Upper left, moved into view
-      ctx.drawImage(bgShape2, width - 450, height / 2 - 200, bgShape2.width / bgScale, bgShape2.height / bgScale); // Middle-right
-      ctx.drawImage(bgShape3, 40, height - 200, bgShape3.width / bgScale, bgShape3.height / bgScale); // Lower left, moved into view
+      ctx.drawImage(bgShape2, baseWidth - 450, baseHeight / 2 - 200, bgShape2.width / bgScale, bgShape2.height / bgScale); // Middle-right
+      ctx.drawImage(bgShape3, 40, baseHeight - 200, bgShape3.width / bgScale, bgShape3.height / bgScale); // Lower left, moved into view
       // Add a larger rectangle in the center text area
       ctx.drawImage(bgShape1, 250, 350, bgShape1.width / (bgScale / 2), bgShape1.height / (bgScale / 2));
       ctx.globalAlpha = 1.0;
@@ -100,16 +112,16 @@ export const socialCardTemplateService = {
       const image = await loadImage(imageUrl);
       const trapezoid = {
         top_left_x: 850, // Moved right for narrower image
-        top_right_x: width,
-        bottom_right_x: width,
+        top_right_x: baseWidth,
+        bottom_right_x: baseWidth,
         bottom_left_x: 700, // Moved right for narrower image
       };
       ctx.save();
       ctx.beginPath();
       ctx.moveTo(trapezoid.top_left_x, 0);
       ctx.lineTo(trapezoid.top_right_x, 0);
-      ctx.lineTo(trapezoid.bottom_right_x, height);
-      ctx.lineTo(trapezoid.bottom_left_x, height);
+      ctx.lineTo(trapezoid.bottom_right_x, baseHeight);
+      ctx.lineTo(trapezoid.bottom_left_x, baseHeight);
       ctx.closePath();
       ctx.clip();
 
@@ -117,8 +129,8 @@ export const socialCardTemplateService = {
       const trapezoidBoundingBox = {
         x: trapezoid.bottom_left_x,
         y: 0,
-        width: width - trapezoid.bottom_left_x,
-        height: height,
+        width: baseWidth - trapezoid.bottom_left_x,
+        height: baseHeight,
       };
 
       const scaleX = trapezoidBoundingBox.width / image.width;
@@ -141,7 +153,7 @@ export const socialCardTemplateService = {
         const logoHeight = 45;
         const logoWidth = logoHeight * logoAspectRatio;
         const logoX = 80;
-        const logoY = height - logoHeight - 60;
+        const logoY = baseHeight - logoHeight - 60;
         ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
       } catch (logoError: any) {
         if (logoError && logoError.code === 'ENOENT') {
@@ -153,8 +165,8 @@ export const socialCardTemplateService = {
 
       // --- Finalize and Upload ---
       const buffer = canvas.toBuffer('image/png', {
-        compressionLevel: 3,
-        filters: Canvas.PNG_FILTER_NONE,
+        compressionLevel: 9,
+        resolution: 300,
       });
 
       const timestamp = new Date().getTime();
