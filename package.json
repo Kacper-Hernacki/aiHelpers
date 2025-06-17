@@ -41,6 +41,8 @@
   },
   "scripts": {
     "start": "bun index.ts",
-    "start:node": "node --loader ts-node/esm index.ts"
+    "start:node": "node --loader ts-node/esm index.ts",
+    "test:social-card": "bun scripts/test-social-card.mjs",
+    "test:canvas-direct": "bun scripts/test-canvas-direct.mjs"
   }
 }

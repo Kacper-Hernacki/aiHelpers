@@ -1,5 +1,5 @@
 // test-canvas-direct.mjs
-import { socialCardTemplateService } from './services/template/socialCardTemplate.service.ts';
+import { socialCardTemplateService } from '../services/template/socialCardTemplate.service.js';
 import fs from 'fs';
 import path from 'path';
 

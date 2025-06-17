@@ -1,5 +1,6 @@
 // services/template/socialCardTemplate.service.ts
 import { createCanvas, loadImage, Canvas, Image } from 'canvas';
+import axios from 'axios';
 import { digitalOceanService } from '../storage/digitalOcean.service.js';
 import path from 'path';
 import fs from 'fs';
@@ -89,12 +90,16 @@ export const socialCardTemplateService = {
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
       const titleLineHeight = 65;
+      debug('Wrapping title text...');
       const wrappedTitle = wrapText(title, textMaxWidth, ctx.font);
+      debug(`Title text wrapped into ${wrappedTitle.length} lines.`);
       let currentY = 100;
+      debug('Drawing title text lines...');
       wrappedTitle.forEach((line) => {
         ctx.fillText(line, textX, currentY);
         currentY += titleLineHeight;
       });
+      debug('Title text drawn.');
 
       // Subtitle
       const subtitle = 'Discover the future of AI-driven content creation and design.';
@@ -102,14 +107,40 @@ export const socialCardTemplateService = {
       ctx.fillStyle = '#05b4d5'; // Cyan/turquoise color
       const subtitleLineHeight = 40;
       currentY += 20;
+      debug('Wrapping subtitle text...');
       const wrappedSubtitle = wrapText(subtitle, textMaxWidth, ctx.font);
+      debug(`Subtitle text wrapped into ${wrappedSubtitle.length} lines.`);
+      debug('Drawing subtitle text lines...');
       wrappedSubtitle.forEach((line) => {
         ctx.fillText(line, textX, currentY);
         currentY += subtitleLineHeight;
       });
 
-      // --- Image with Trapezoid Clip ---
-      const image = await loadImage(imageUrl);
+      // Load the AI-generated image
+      let image: Image;
+      try {
+        debug(`Fetching image with axios from: ${imageUrl}`);
+        const imageResponse = await axios.get(imageUrl, {
+          responseType: 'arraybuffer',
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          },
+          timeout: 15000, // 15 second timeout
+        });
+        debug(`axios request successful. Status: ${imageResponse.status}.`);
+        const imageBuffer = Buffer.from(imageResponse.data, 'binary');
+        debug(`Buffer created, size: ${imageBuffer.length}. Loading into canvas.`);
+        image = await loadImage(imageBuffer);
+        debug('Image loaded into canvas successfully.');
+      } catch (axiosError: any) {
+        debug('Error fetching image with axios:', axiosError.message);
+        if (axiosError.response) {
+          debug('Axios response error:', axiosError.response.status, axiosError.response.data.toString());
+        }
+        // Re-throw the error to be caught by the main try-catch block
+        throw new Error(`Failed to download image via axios: ${axiosError.message}`);
+      }
+      debug('Starting trapezoid clipping...');
       const trapezoid = {
         top_left_x: 850, // Moved right for narrower image
         top_right_x: baseWidth,
@@ -124,8 +155,10 @@ export const socialCardTemplateService = {
       ctx.lineTo(trapezoid.bottom_left_x, baseHeight);
       ctx.closePath();
       ctx.clip();
+      debug('Trapezoid clipping complete.');
 
       // Logic to scale and center the image to fill the trapezoid
+      debug('Calculating image scaling for trapezoid...');
       const trapezoidBoundingBox = {
         x: trapezoid.bottom_left_x,
         y: 0,
@@ -141,20 +174,27 @@ export const socialCardTemplateService = {
       const drawHeight = image.height * scale;
       const drawX = trapezoidBoundingBox.x + (trapezoidBoundingBox.width - drawWidth) / 2;
       const drawY = trapezoidBoundingBox.y + (trapezoidBoundingBox.height - drawHeight) / 2;
+      debug('Image scaling calculated.');
 
+      debug('Drawing main image into clipped trapezoid...');
       ctx.drawImage(image, drawX, drawY, drawWidth, drawHeight);
       ctx.restore();
+      debug('Main image drawn.');
 
       // --- Logo ---
       try {
+        debug('Loading logo...');
         const logoPath = path.join(process.cwd(), 'assets', 'aiadaptiv-text-logo.png');
         const logo = await loadImage(logoPath);
+        debug('Logo loaded.');
         const logoAspectRatio = logo.width / logo.height;
         const logoHeight = 45;
         const logoWidth = logoHeight * logoAspectRatio;
         const logoX = 80;
         const logoY = baseHeight - logoHeight - 60;
+        debug('Drawing logo...');
         ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
+        debug('Logo drawn.');
       } catch (logoError: any) {
         if (logoError && logoError.code === 'ENOENT') {
           debug('Logo not found, skipping logo drawing.');
@@ -164,10 +204,12 @@ export const socialCardTemplateService = {
       }
 
       // --- Finalize and Upload ---
+      debug('Converting canvas to buffer...');
       const buffer = canvas.toBuffer('image/png', {
         compressionLevel: 9,
         resolution: 300,
       });
+      debug('Canvas converted to buffer.');
 
       const timestamp = new Date().getTime();
       const sanitizedTitle = title
@@ -177,10 +219,10 @@ export const socialCardTemplateService = {
         .substring(0, 30);
       const filename = `social-card-${timestamp}-${sanitizedTitle}.png`;
 
+      debug('Uploading file...');
       const fileData = await digitalOceanService.uploadFile(
         buffer,
-        filename,
-        'image/png'
+        filename
       );
 
       return {

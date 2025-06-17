@@ -1,6 +1,6 @@
 // routes/templateGenerator.routes.ts
 import express from "express";
-import { templateGeneratorController } from "../controllers/templateGenerator.controller";
+import { templateGeneratorController } from "../controllers/templateGenerator.controller.ts";
 import { Request, Response, NextFunction } from "express";
 
 const router = express.Router();
@@ -11,11 +11,15 @@ router.get("/", (req, res) => {
 });
 
 // Wrapper to handle async controller functions
-const asyncHandler = (fn: Function) => (req: Request, res: Response, next: NextFunction) => {
-  Promise.resolve(fn(req, res, next)).catch(next);
-};
+const asyncHandler =
+  (fn: Function) => (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
 
 // Add the thumbnail generation endpoint
-router.post("/generate-thumbnail", asyncHandler(templateGeneratorController.generateArticleThumbnail));
+router.post(
+  "/generate-thumbnail",
+  asyncHandler(templateGeneratorController.generateArticleThumbnail)
+);
 
 export default router;
