@@ -1,5 +1,5 @@
 // services/template/socialCardTemplate.service.ts
-import { createCanvas, loadImage, Canvas, Image } from 'canvas';
+import { createCanvas, loadImage, Canvas, Image, registerFont } from 'canvas';
 import axios from 'axios';
 import { digitalOceanService } from '../storage/digitalOcean.service.js';
 import path from 'path';
@@ -8,8 +8,34 @@ import { Resvg } from '@resvg/resvg-js';
 
 // Debug logging function
 const debug = (...args: any[]) => {
-  console.log(new Date().toISOString(), '|', ...args);
+  console.log(new Date().toISOString(), "|", ...args);
 };
+
+// Register Poppins fonts
+const fontDir = path.join(process.cwd(), 'assets', 'fonts', 'Poppins Font');
+
+const fontsToRegister = {
+  '100': 'Poppins-Thin.ttf',
+  '200': 'Poppins-ExtraLight.ttf',
+  '300': 'Poppins-Light.ttf',
+  '400': 'Poppins-Regular.ttf',
+  '500': 'Poppins-Medium.ttf',
+  '600': 'Poppins-SemiBold.ttf',
+  '700': 'Poppins-Bold.ttf',
+  'bold': 'Poppins-Bold.ttf', // Alias for convenience, as 'bold' is used in the code
+  '800': 'Poppins-ExtraBold.ttf',
+  '900': 'Poppins-Black.ttf',
+};
+
+Object.entries(fontsToRegister).forEach(([weight, file]) => {
+  const fontPath = path.join(fontDir, file);
+  if (fs.existsSync(fontPath)) {
+    registerFont(fontPath, { family: 'Poppins', weight });
+    debug(`Registered Poppins font: ${file} with weight ${weight}`);
+  } else {
+    debug(`Font not found at path: ${fontPath}`);
+  }
+});
 
 export const socialCardTemplateService = {
   /**
