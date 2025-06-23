@@ -1,7 +1,7 @@
 import { OpenAIEmbeddings } from '@langchain/openai';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { PrismaClient } from '@prisma/client';
-import pdf from 'pdf-parse';
+import * as pdfjs from 'pdfjs-dist';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
@@ -29,15 +29,24 @@ export class PDFEmbeddingService {
     try {
       const documentId = uuidv4();
 
-      // Load and parse PDF with proper buffer handling
+      // Load and parse PDF using pdfjs-dist
       const pdfBuffer = fs.readFileSync(filePath);
-      const pdfData = await pdf(pdfBuffer, {
-        // Disable test files and other debugging features
-        version: 'v1.10.100',
-        max: 0, // Parse all pages
-      });
+      const pdfDocument = await pdfjs.getDocument({
+        data: pdfBuffer,
+        useSystemFonts: true,
+      }).promise;
+
+      let fullText = '';
       
-      const fullText = pdfData.text;
+      // Extract text from all pages
+      for (let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++) {
+        const page = await pdfDocument.getPage(pageNum);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(' ');
+        fullText += pageText + '\n\n';
+      }
 
       // Split text into chunks
       const chunks = await this.textSplitter.splitText(fullText);
