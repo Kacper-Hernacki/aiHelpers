@@ -8,7 +8,6 @@
     "@types/jsonwebtoken": "^9.0.8",
     "@types/multer": "^1.4.11",
     "@types/node-fetch": "^2.6.9",
-    "@types/pdf-parse": "^1.1.5",
     "bun-types": "latest",
     "prisma": "^6.4.1",
     "ts-node": "^10.9.2"
@@ -36,7 +35,6 @@
     "langchain": "^0.2.11",
     "multer": "^1.4.5-lts.1",
     "openai": "^4.53.2",
-    "pdf-parse": "^1.1.1",
     "pgvector": "^0.2.1",
     "serpapi": "^2.1.0",
     "tesseract.js": "^6.0.0",

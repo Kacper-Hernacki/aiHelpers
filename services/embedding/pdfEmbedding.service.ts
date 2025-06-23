@@ -2,7 +2,6 @@ import { OpenAIEmbeddings } from '@langchain/openai';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
 import { PrismaClient } from '@prisma/client';
-import pdf from 'pdf-parse';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
@@ -30,10 +29,12 @@ export class PDFEmbeddingService {
     try {
       const documentId = uuidv4();
 
-      // Load and parse PDF
-      const pdfBuffer = fs.readFileSync(filePath);
-      const pdfData = await pdf(pdfBuffer);
-      const fullText = pdfData.text;
+      // Use LangChain's PDFLoader for more reliable parsing
+      const loader = new PDFLoader(filePath);
+      const docs = await loader.load();
+      
+      // Combine all pages into full text
+      const fullText = docs.map(doc => doc.pageContent).join('\n\n');
 
       // Split text into chunks
       const chunks = await this.textSplitter.splitText(fullText);
@@ -54,7 +55,11 @@ export class PDFEmbeddingService {
 
       // Clean up temporary file if it exists
       if (filePath.includes('/tmp/') || filePath.includes('/uploads/')) {
-        fs.unlinkSync(filePath);
+        try {
+          fs.unlinkSync(filePath);
+        } catch (err) {
+          console.warn('Could not delete temp file:', err);
+        }
       }
 
       return documentId;
