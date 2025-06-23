@@ -7,6 +7,9 @@ RUN bun install
 
 COPY . .
 
+# Generate Prisma client
+RUN bunx prisma generate
+
 EXPOSE 3000
 
 CMD ["bun", "run", "start"]
