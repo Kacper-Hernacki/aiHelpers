@@ -1,10 +1,11 @@
 import { OpenAIEmbeddings } from '@langchain/openai';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
+import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
 import { PrismaClient } from '@prisma/client';
-import * as pdfjs from 'pdfjs-dist';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
+import { PDFTextExtractor } from '../../utils/pdfTextExtractor.js';
 
 const prisma = new PrismaClient();
 
@@ -28,24 +29,28 @@ export class PDFEmbeddingService {
   async embedPDF(filePath: string, filename: string): Promise<string> {
     try {
       const documentId = uuidv4();
-
-      // Load and parse PDF using pdfjs-dist
-      const pdfBuffer = fs.readFileSync(filePath);
-      const pdfDocument = await pdfjs.getDocument({
-        data: pdfBuffer,
-        useSystemFonts: true,
-      }).promise;
-
       let fullText = '';
-      
-      // Extract text from all pages
-      for (let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++) {
-        const page = await pdfDocument.getPage(pageNum);
-        const textContent = await page.getTextContent();
-        const pageText = textContent.items
-          .map((item: any) => item.str)
-          .join(' ');
-        fullText += pageText + '\n\n';
+
+      // Try multiple methods for PDF text extraction
+      try {
+        // Method 1: Try LangChain PDFLoader
+        const loader = new PDFLoader(filePath, {
+          splitPages: false,
+        });
+        const docs = await loader.load();
+        fullText = docs.map(doc => doc.pageContent).join('\n\n');
+        
+        console.log('Successfully extracted text using LangChain PDFLoader');
+      } catch (langchainError: any) {
+        console.log('LangChain PDFLoader failed, trying fallback method:', langchainError.message);
+        
+        // Method 2: Use our fallback extractor
+        fullText = await PDFTextExtractor.extractText(filePath);
+        console.log('Successfully extracted text using fallback method');
+      }
+
+      if (!fullText || fullText.trim().length === 0) {
+        throw new Error('No text could be extracted from the PDF');
       }
 
       // Split text into chunks
