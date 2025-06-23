@@ -1,11 +1,12 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearchPostgres"]
+  previewFeatures = ["fullTextSearchPostgres", "postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
 }
 
 model message_history {
@@ -41,4 +42,20 @@ model skills {
   search_tags        String[]
   parameter_schema   Json
   created_at         DateTime? @default(now())
+}
+
+model document_embeddings {
+  id            Int                       @id @default(autoincrement())
+  document_id   String                    @unique
+  filename      String
+  content       String
+  chunk_index   Int
+  chunk_content String
+  embedding     Unsupported("vector(1536)")
+  metadata      Json?
+  created_at    DateTime                  @default(now())
+  updated_at    DateTime                  @updatedAt
+
+  @@index([document_id])
+  @@index([chunk_index])
 }

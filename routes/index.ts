@@ -8,6 +8,7 @@ import comfyICURoutes from "./comfyICU.routes.ts";
 import fileUploadRoutes from "./fileUpload.routes.ts";
 import imageAnalysisRoutes from "./imageAnalysis.routes.ts";
 import templateGeneratorRoutes from "./templateGenerator.routes.ts";
+import pdfEmbeddingRoutes from "./pdfEmbedding.routes.ts";
 
 export default (app: Express) => {
   app.use("/youtube", youtubeRoutes);
@@ -19,4 +20,5 @@ export default (app: Express) => {
   app.use("/file", fileUploadRoutes);
   app.use("/image", imageAnalysisRoutes);
   app.use("/template", templateGeneratorRoutes);
+  app.use("/pdf", pdfEmbeddingRoutes);
 };

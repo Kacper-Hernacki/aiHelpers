@@ -1,0 +1,196 @@
+import { OpenAIEmbeddings } from '@langchain/openai';
+import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
+import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
+import { PrismaClient } from '@prisma/client';
+import pdf from 'pdf-parse';
+import { v4 as uuidv4 } from 'uuid';
+import fs from 'fs';
+import path from 'path';
+
+const prisma = new PrismaClient();
+
+export class PDFEmbeddingService {
+  private embeddings: OpenAIEmbeddings;
+  private textSplitter: RecursiveCharacterTextSplitter;
+
+  constructor() {
+    this.embeddings = new OpenAIEmbeddings({
+      openAIApiKey: process.env.OPENAI_API_KEY,
+      modelName: "text-embedding-3-small", // Using smaller model for cost efficiency
+    });
+
+    this.textSplitter = new RecursiveCharacterTextSplitter({
+      chunkSize: 1000,
+      chunkOverlap: 200,
+      separators: ['\n\n', '\n', ' ', ''],
+    });
+  }
+
+  async embedPDF(filePath: string, filename: string): Promise<string> {
+    try {
+      const documentId = uuidv4();
+
+      // Load and parse PDF
+      const pdfBuffer = fs.readFileSync(filePath);
+      const pdfData = await pdf(pdfBuffer);
+      const fullText = pdfData.text;
+
+      // Split text into chunks
+      const chunks = await this.textSplitter.splitText(fullText);
+
+      console.log(`Processing ${chunks.length} chunks for document: ${filename}`);
+
+      // Process chunks in batches to avoid rate limits
+      const batchSize = 5;
+      for (let i = 0; i < chunks.length; i += batchSize) {
+        const batch = chunks.slice(i, i + batchSize);
+        await this.processBatch(batch, documentId, filename, fullText, i);
+        
+        // Small delay between batches to respect rate limits
+        if (i + batchSize < chunks.length) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+
+      // Clean up temporary file if it exists
+      if (filePath.includes('/tmp/') || filePath.includes('/uploads/')) {
+        fs.unlinkSync(filePath);
+      }
+
+      return documentId;
+    } catch (error) {
+      console.error('Error embedding PDF:', error);
+      throw error;
+    }
+  }
+
+  private async processBatch(
+    chunks: string[], 
+    documentId: string, 
+    filename: string, 
+    fullText: string, 
+    startIndex: number
+  ): Promise<void> {
+    try {
+      // Generate embeddings for the batch
+      const embeddings = await this.embeddings.embedDocuments(chunks);
+
+      // Prepare database records
+      const records = chunks.map((chunk, index) => ({
+        document_id: documentId,
+        filename,
+        content: fullText,
+        chunk_index: startIndex + index,
+        chunk_content: chunk,
+        embedding: `[${embeddings[index].join(',')}]`, // Convert to PostgreSQL array format
+        metadata: {
+          chunk_size: chunk.length,
+          embedding_model: "text-embedding-3-small",
+          processed_at: new Date().toISOString(),
+        },
+      }));
+
+      // Insert into database using raw SQL for vector type
+      for (const record of records) {
+        await prisma.$executeRaw`
+          INSERT INTO document_embeddings (
+            document_id, filename, content, chunk_index, chunk_content, embedding, metadata, created_at, updated_at
+          ) VALUES (
+            ${record.document_id},
+            ${record.filename},
+            ${record.content},
+            ${record.chunk_index},
+            ${record.chunk_content},
+            ${record.embedding}::vector,
+            ${JSON.stringify(record.metadata)}::jsonb,
+            NOW(),
+            NOW()
+          )
+        `;
+      }
+
+      console.log(`Processed batch of ${chunks.length} chunks`);
+    } catch (error) {
+      console.error('Error processing batch:', error);
+      throw error;
+    }
+  }
+
+  async searchSimilarChunks(query: string, limit: number = 5): Promise<any[]> {
+    try {
+      // Generate embedding for the query
+      const queryEmbedding = await this.embeddings.embedQuery(query);
+      const queryVector = `[${queryEmbedding.join(',')}]`;
+
+      // Search for similar chunks using cosine similarity
+      const results = await prisma.$queryRaw`
+        SELECT 
+          document_id,
+          filename,
+          chunk_content,
+          chunk_index,
+          metadata,
+          1 - (embedding <=> ${queryVector}::vector) as similarity
+        FROM document_embeddings
+        ORDER BY embedding <=> ${queryVector}::vector
+        LIMIT ${limit}
+      `;
+
+      return results as any[];
+    } catch (error) {
+      console.error('Error searching similar chunks:', error);
+      throw error;
+    }
+  }
+
+  async getDocumentChunks(documentId: string): Promise<any[]> {
+    try {
+      const chunks = await prisma.document_embeddings.findMany({
+        where: { document_id: documentId },
+        orderBy: { chunk_index: 'asc' },
+        select: {
+          chunk_content: true,
+          chunk_index: true,
+          metadata: true,
+        },
+      });
+
+      return chunks;
+    } catch (error) {
+      console.error('Error fetching document chunks:', error);
+      throw error;
+    }
+  }
+
+  async deleteDocument(documentId: string): Promise<void> {
+    try {
+      await prisma.document_embeddings.deleteMany({
+        where: { document_id: documentId },
+      });
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      throw error;
+    }
+  }
+
+  async getAllDocuments(): Promise<any[]> {
+    try {
+      const documents = await prisma.$queryRaw`
+        SELECT 
+          document_id,
+          filename,
+          COUNT(*) as chunk_count,
+          MIN(created_at) as created_at,
+          MAX(updated_at) as updated_at
+        FROM document_embeddings
+        GROUP BY document_id, filename
+        ORDER BY created_at DESC
+      `;
+
+      return documents as any[];
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+      throw error;
+    }
+  }
+}
