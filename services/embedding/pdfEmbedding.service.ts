@@ -26,6 +26,39 @@ export class PDFEmbeddingService {
     });
   }
 
+  /**
+   * Clean text to remove null bytes and invalid UTF8 characters
+   */
+  private cleanText(text: string): string {
+    if (!text) return '';
+    
+    return text
+      // Remove null bytes and other control characters except newlines and tabs
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+      // Remove any remaining invalid UTF8 sequences
+      .replace(/\uFFFD/g, '') // Remove replacement characters
+      // Normalize whitespace
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  /**
+   * Validate text for database storage
+   */
+  private validateText(text: string, maxLength: number = 100000): string {
+    if (!text) return '';
+    
+    const cleaned = this.cleanText(text);
+    
+    // Truncate if too long to prevent database issues
+    if (cleaned.length > maxLength) {
+      console.warn(`Text truncated from ${cleaned.length} to ${maxLength} characters`);
+      return cleaned.substring(0, maxLength) + '...';
+    }
+    
+    return cleaned;
+  }
+
   async embedPDF(filePath: string, filename: string): Promise<string> {
     try {
       const documentId = uuidv4();
@@ -52,6 +85,8 @@ export class PDFEmbeddingService {
       if (!fullText || fullText.trim().length === 0) {
         throw new Error('No text could be extracted from the PDF');
       }
+
+      fullText = this.validateText(fullText);
 
       // Split text into chunks
       const chunks = await this.textSplitter.splitText(fullText);
@@ -103,7 +138,7 @@ export class PDFEmbeddingService {
         filename,
         content: fullText,
         chunk_index: startIndex + index,
-        chunk_content: chunk,
+        chunk_content: this.validateText(chunk),
         embedding: `[${embeddings[index].join(',')}]`, // Convert to PostgreSQL array format
         metadata: {
           chunk_size: chunk.length,
@@ -140,8 +175,11 @@ export class PDFEmbeddingService {
 
   async searchSimilarChunks(query: string, limit: number = 5): Promise<any[]> {
     try {
+      // Clean the query text
+      const cleanQuery = this.cleanText(query);
+      
       // Generate embedding for the query
-      const queryEmbedding = await this.embeddings.embedQuery(query);
+      const queryEmbedding = await this.embeddings.embedQuery(cleanQuery);
       const queryVector = `[${queryEmbedding.join(',')}]`;
 
       // Search for similar chunks using cosine similarity
