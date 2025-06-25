@@ -1,6 +1,7 @@
 # aiAdaptiv/aiHelpers - Windsurf Development Rules
 
 ## Project Context
+
 - Node.js/TypeScript backend with Express.js framework
 - Neo4j graph database + PostgreSQL with pgvector for hybrid RAG
 - ES modules (type: "module" in package.json)
@@ -9,6 +10,7 @@
 - Bun for development, Node.js for production
 
 ## TypeScript & Module Rules
+
 - Always use .js extensions in TypeScript imports for ES module compatibility
 - Use ES2022 module system in tsconfig.build.json
 - Maintain strict TypeScript typing for services and controllers
@@ -16,6 +18,7 @@
 - Import paths should NOT include .ts extensions
 
 ## Architecture Guidelines
+
 - Services in services/ directory: database, graph, storage, AI operations
 - Controllers in controllers/ directory with proper error handling
 - Routes in routes/ directory with middleware integration
@@ -23,6 +26,7 @@
 - Documentation in docs/ directory with proper structure
 
 ## Database & Search Rules
+
 - Follow hybrid RAG architecture patterns combining vector and graph search
 - Use proper async/await patterns for database operations
 - Neo4j service methods should return proper TypeScript interfaces
@@ -30,6 +34,7 @@
 - Always handle database connection errors gracefully
 
 ## Production Build Rules
+
 - Use tsconfig.build.json for production builds
 - Compile to dist/ directory with source maps
 - Include assets copying in build process
@@ -37,19 +42,37 @@
 - Ensure all imports work in compiled ES modules
 
 ## Environment & Configuration
+
 - Environment variables managed through .env files with fallbacks
 - Use .env.local for development, .env.production for production
 - Store sensitive API keys properly (OpenAI, DigitalOcean, etc.)
 - Docker configurations in infrastructure/docker/
 
 ## Error Handling & Logging
+
 - Always catch and properly handle async errors
 - Use structured logging for debugging
 - Return proper HTTP status codes
 - Include detailed error messages for development
 
 ## File Organization
+
 - Keep root directory clean
 - Use infrastructure/ for setup scripts and configs
 - Organize documentation in docs/ with subdirectories
 - Maintain proper .gitignore for build artifacts
+
+## AI Development & Logic Support
+
+- **CRITICAL**: Always check the `.ai-logic-support/` folder for senior developer guidance on AI implementations
+- This folder contains best practices, patterns, and examples for:
+  - LangChain integration and chain building
+  - Vector database operations and similarity search
+  - Neo4j graph database patterns and Cypher queries
+  - Hybrid RAG architectures and implementation strategies
+  - OpenAI API usage patterns and rate limiting
+  - Advanced AI service architectures and error handling
+- Reference these patterns before implementing new AI features
+- Use documented examples as templates for consistent AI logic
+- Follow established patterns for embeddings, chunking, and retrieval
+- Consult troubleshooting guides for common AI integration issues

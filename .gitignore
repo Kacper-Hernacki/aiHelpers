@@ -188,3 +188,5 @@ temp-uploads/
 infrastructure/docker/data/
 infrastructure/docker/logs/
 infrastructure/scripts/*.log
+
+.ai-logic-support
