@@ -55,6 +55,10 @@ build/Release
 node_modules/
 jspm_packages/
 
+# Build output
+dist/
+build/
+
 # Snowpack dependency directory (https://snowpack.dev/)
 
 web_modules/
@@ -115,7 +119,6 @@ out
 # Nuxt.js build / generate output
 
 .nuxt
-dist
 
 # Gatsby files
 
@@ -167,3 +170,21 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.\*
+
+# Documentation and temporary files
+test-*.ts
+test-*.js
+temp-*
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+test-document.txt
+sample-*.pdf
+temp-uploads/
+
+# Infrastructure temporary files
+infrastructure/docker/data/
+infrastructure/docker/logs/
+infrastructure/scripts/*.log

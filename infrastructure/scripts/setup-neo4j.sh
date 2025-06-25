@@ -4,7 +4,7 @@ echo "🚀 Setting up Neo4j + pgvector Hybrid RAG System"
 
 # 1. Start Neo4j container
 echo "📦 Starting Neo4j container..."
-docker-compose -f docker-compose.neo4j.yml up -d
+docker-compose -f infrastructure/docker/docker-compose.neo4j.yml up -d
 
 # 2. Wait for Neo4j to be ready
 echo "⏳ Waiting for Neo4j to be ready..."

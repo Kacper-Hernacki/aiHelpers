@@ -48,10 +48,17 @@
     "zod": "latest"
   },
   "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && cp -r assets dist/ 2>/dev/null || true",
+    "build:clean": "rm -rf dist",
     "start": "bun index.ts",
     "start:node": "node --loader ts-node/esm index.ts",
+    "start:prod": "node dist/index.js",
     "dev": "nodemon index.ts",
     "test:hybrid": "bun test-hybrid.ts",
+    "setup:neo4j": "chmod +x infrastructure/scripts/setup-neo4j.sh && ./infrastructure/scripts/setup-neo4j.sh",
+    "setup:database": "psql -d $DATABASE_URL -f infrastructure/database/safe_migration.sql",
+    "docker:neo4j": "docker-compose -f infrastructure/docker/docker-compose.neo4j.yml up -d",
+    "docker:neo4j:down": "docker-compose -f infrastructure/docker/docker-compose.neo4j.yml down",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:studio": "prisma studio",
