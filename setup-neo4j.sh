@@ -15,9 +15,9 @@ echo "🔧 Setting up environment variables..."
 cat >> .env << EOL
 
 # Neo4j Configuration
-NEO4J_URL=bolt://localhost:7687
+NEO4J_URL=bolt://165.22.31.204:7687
 NEO4J_USER=neo4j
-NEO4J_PASSWORD=your_password_here
+NEO4J_PASSWORD=xR59zN@hneo4j
 EOL
 
 echo "✅ Setup complete!"

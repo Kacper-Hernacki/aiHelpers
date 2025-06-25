@@ -9,6 +9,7 @@ import fileUploadRoutes from "./fileUpload.routes.ts";
 import imageAnalysisRoutes from "./imageAnalysis.routes.ts";
 import templateGeneratorRoutes from "./templateGenerator.routes.ts";
 import pdfEmbeddingRoutes from "./pdfEmbedding.routes.ts";
+import hybridRAGRoutes from "./hybridRAG.routes.ts";
 
 export default (app: Express) => {
   app.use("/youtube", youtubeRoutes);
@@ -21,4 +22,5 @@ export default (app: Express) => {
   app.use("/image", imageAnalysisRoutes);
   app.use("/template", templateGeneratorRoutes);
   app.use("/pdf", pdfEmbeddingRoutes);
+  app.use("/hybrid", hybridRAGRoutes);
 };

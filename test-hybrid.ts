@@ -33,29 +33,29 @@ async function testHybridSetup() {
     console.log('\n3️⃣ Testing graph operations...');
     
     // Create test document
-    await neo4j.createDocumentNode('test-doc-1', 'test.pdf', { test: true });
+    await neo4j.createDocumentNode('test-doc-1', 'test.pdf', { testFlag: 'true' });
     
     // Create test entities
-    const testEntities = [
+    const testEntities: any[] = [
       {
         id: 'openai_entity',
-        type: 'ORGANIZATION' as const,
+        type: 'ORGANIZATION',
         name: 'OpenAI',
         properties: { description: 'AI research company' }
       },
       {
         id: 'gpt4_entity', 
-        type: 'TECHNOLOGY' as const,
+        type: 'CONCEPT',
         name: 'GPT-4',
         properties: { description: 'Large language model' }
       }
     ];
 
-    const testRelationships = [
+    const testRelationships: any[] = [
       {
         from: 'openai_entity',
         to: 'gpt4_entity',
-        type: 'CREATES' as const,
+        type: 'RELATES_TO',
         properties: { confidence: 0.9 }
       }
     ];

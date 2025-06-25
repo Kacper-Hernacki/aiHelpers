@@ -54,7 +54,11 @@ export class Neo4jService {
             d.uploadedAt = datetime(),
             d.metadata = $metadata
         `,
-        { documentId, filename, metadata }
+        { 
+          documentId, 
+          filename, 
+          metadata: typeof metadata === 'object' ? JSON.stringify(metadata) : metadata
+        }
       );
     } finally {
       await session.close();
@@ -86,7 +90,7 @@ export class Neo4jService {
             id: entity.id,
             type: entity.type,
             name: entity.name,
-            properties: entity.properties
+            properties: typeof entity.properties === 'object' ? JSON.stringify(entity.properties) : entity.properties
           }
         );
 
@@ -113,7 +117,7 @@ export class Neo4jService {
           {
             fromId: rel.from,
             toId: rel.to,
-            properties: rel.properties
+            properties: typeof rel.properties === 'object' ? JSON.stringify(rel.properties) : rel.properties
           }
         );
       }

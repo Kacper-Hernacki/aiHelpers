@@ -17,8 +17,8 @@
   },
   "dependencies": {
     "@langchain/community": "^0.3.32",
-    "@langchain/core": "^0.3.40",
-    "@langchain/openai": "^0.5.15",
+    "@langchain/core": "latest",
+    "@langchain/openai": "latest",
     "@notionhq/client": "^2.2.16",
     "@prisma/client": "^6.4.1",
     "@resvg/resvg-js": "^2.6.2",
@@ -33,7 +33,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "langchain": "^0.2.11",
+    "langchain": "latest",
     "multer": "^1.4.5-lts.1",
     "neo4j-driver": "^5.28.1",
     "openai": "^4.53.2",
@@ -45,11 +45,16 @@
     "uuid": "^10.0.0",
     "winston": "^3.17.0",
     "youtubei.js": "^13.3.0",
-    "zod": "^3.23.8"
+    "zod": "latest"
   },
   "scripts": {
     "start": "bun index.ts",
     "start:node": "node --loader ts-node/esm index.ts",
+    "dev": "nodemon index.ts",
+    "test:hybrid": "bun test-hybrid.ts",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
+    "prisma:studio": "prisma studio",
     "test:social-card": "bun scripts/test-social-card.mjs",
     "test:canvas-direct": "bun scripts/test-canvas-direct.mjs"
   }
