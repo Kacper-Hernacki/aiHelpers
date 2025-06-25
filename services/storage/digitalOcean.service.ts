@@ -36,9 +36,10 @@ export const digitalOceanService = {
    * Upload a file to Digital Ocean Spaces
    * @param fileBuffer - Buffer of the file to upload
    * @param filename - Original name of the file
+   * @param mimeType - Optional MIME type, will be determined from filename if not provided
    * @returns Promise with URLs and file info
    */
-  uploadFile(fileBuffer: Buffer, filename: string) {
+  uploadFile(fileBuffer: Buffer, filename: string, mimeType?: string) {
     const s3 = this.getS3Client();
     const uniqueFilename = `${Date.now()}-${uuidv4()}${path.extname(filename)}`;
     
@@ -48,7 +49,7 @@ export const digitalOceanService = {
             Key: uniqueFilename,
             Body: fileBuffer,
             ACL: 'public-read',
-            ContentType: this.getContentType(filename)
+            ContentType: mimeType || this.getContentType(filename)
         };
         
         debug('Attempting to upload to Digital Ocean with params:', {

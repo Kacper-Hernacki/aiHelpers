@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { HybridRAGService, SearchStrategy } from '../services/hybridRAG.service.js';
-import { Neo4jService } from '../services/graph/neo4j.service.js';
+import { HybridRAGService, SearchStrategy } from '../services/hybridRAG.service';
+import { Neo4jService } from '../services/graph/neo4j.service';
 
 const hybridService = new HybridRAGService();
 const graphService = new Neo4jService();
@@ -11,7 +11,8 @@ const graphService = new Neo4jService();
 export const uploadPDFHybrid = async (req: Request, res: Response) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
+      res.status(400).json({ error: 'No file uploaded' });
+      return;
     }
 
     const { filename, path } = req.file;
@@ -22,10 +23,11 @@ export const uploadPDFHybrid = async (req: Request, res: Response) => {
     if (!isConnected) {
       console.warn('Neo4j not available, falling back to vector-only processing');
       // Fallback to regular vector processing here
-      return res.status(500).json({ 
+      res.status(500).json({ 
         error: 'Graph database unavailable',
         suggestion: 'Start Neo4j with: ./setup-neo4j.sh'
       });
+      return;
     }
 
     const documentId = await hybridService.embedPDFWithGraph(path, filename);
@@ -65,7 +67,8 @@ export const hybridSearch = async (req: Request, res: Response) => {
     } = req.body;
 
     if (!query) {
-      return res.status(400).json({ error: 'Query is required' });
+      res.status(400).json({ error: 'Query is required' });
+      return;
     }
 
     const strategy: SearchStrategy = {
@@ -110,7 +113,8 @@ export const compareSearchMethods = async (req: Request, res: Response) => {
     const { query, limit = 5 } = req.body;
 
     if (!query) {
-      return res.status(400).json({ error: 'Query is required' });
+      res.status(400).json({ error: 'Query is required' });
+      return;
     }
 
     // Vector-only search

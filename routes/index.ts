@@ -1,15 +1,15 @@
 import { Express } from "express";
-import youtubeRoutes from "./youtube.routes.ts";
-import notesRoutes from "./notes.routes.ts";
-import linkedinRoutes from "./linkedin.routes.ts";
-import flightsRoutes from "./flights.routes.ts";
-import notionRoutes from "./notion.routes.ts";
-import comfyICURoutes from "./comfyICU.routes.ts";
-import fileUploadRoutes from "./fileUpload.routes.ts";
-import imageAnalysisRoutes from "./imageAnalysis.routes.ts";
-import templateGeneratorRoutes from "./templateGenerator.routes.ts";
-import pdfEmbeddingRoutes from "./pdfEmbedding.routes.ts";
-import hybridRAGRoutes from "./hybridRAG.routes.ts";
+import youtubeRoutes from "./youtube.routes";
+import notesRoutes from "./notes.routes";
+import linkedinRoutes from "./linkedin.routes";
+import flightsRoutes from "./flights.routes";
+import notionRoutes from "./notion.routes";
+import comfyICURoutes from "./comfyICU.routes";
+import fileUploadRoutes from "./fileUpload.routes";
+import imageAnalysisRoutes from "./imageAnalysis.routes";
+import templateGeneratorRoutes from "./templateGenerator.routes";
+import pdfEmbeddingRoutes from "./pdfEmbedding.routes";
+import hybridRAGRoutes from "./hybridRAG.routes";
 
 export default (app: Express) => {
   app.use("/youtube", youtubeRoutes);

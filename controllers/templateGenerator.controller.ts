@@ -1,6 +1,6 @@
 // controllers/templateGenerator.controller.ts
 import { Request, Response } from "express";
-import { socialCardTemplateService } from "../services/template/socialCardTemplate.service.ts";
+import { socialCardTemplateService } from "../services/template/socialCardTemplate.service";
 
 // Debug logging function
 const debug = (...args: any[]) => {

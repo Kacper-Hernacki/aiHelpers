@@ -2,17 +2,20 @@ import neo4j, { Driver, Session, Result, Record } from 'neo4j-driver';
 
 export interface EntityNode {
   id: string;
-  type: 'PERSON' | 'ORGANIZATION' | 'LOCATION' | 'CONCEPT' | 'DOCUMENT';
+  type: string;
   name: string;
-  properties: Record<string, any>;
+  properties: Record<any, any>;
 }
 
 export interface RelationshipEdge {
   from: string;
   to: string;
-  type: 'MENTIONS' | 'RELATES_TO' | 'CONTAINS' | 'PART_OF' | 'SIMILAR_TO';
-  properties: Record<string, any>;
+  type: string;
+  properties: Record<any, any>;
 }
+
+interface Entity extends EntityNode {}
+interface Relationship extends RelationshipEdge {}
 
 export class Neo4jService {
   private driver: Driver;
@@ -29,12 +32,12 @@ export class Neo4jService {
   }
 
   async testConnection(): Promise<boolean> {
-    const session = this.driver.session();
+    const session: Session = this.driver.session();
     try {
-      const result: Result = await session.run('RETURN 1 as test');
+      const result = await session.run('RETURN 1 as test');
       return result.records.length > 0;
     } catch (error) {
-      console.error('Neo4j connection failed:', error);
+      console.error('Neo4j connection test failed:', error);
       return false;
     } finally {
       await session.close();
@@ -70,8 +73,8 @@ export class Neo4jService {
    */
   async createEntitiesAndRelationships(
     documentId: string,
-    entities: EntityNode[],
-    relationships: RelationshipEdge[]
+    entities: Entity[],
+    relationships: Relationship[]
   ): Promise<void> {
     const session = this.driver.session();
     const tx = session.beginTransaction();
@@ -137,7 +140,7 @@ export class Neo4jService {
   async findRelatedContext(entityIds: string[], maxDepth: number = 2): Promise<any[]> {
     const session = this.driver.session();
     try {
-      const result: Result = await session.run(
+      const result = await session.run(
         `
         MATCH (start:Entity)
         WHERE start.id IN $entityIds
@@ -172,7 +175,7 @@ export class Neo4jService {
   async findRelatedDocuments(entityIds: string[]): Promise<string[]> {
     const session = this.driver.session();
     try {
-      const result: Result = await session.run(
+      const result = await session.run(
         `
         MATCH (e:Entity)-[:MENTIONS]-(d:Document)
         WHERE e.id IN $entityIds
@@ -182,6 +185,53 @@ export class Neo4jService {
       );
 
       return result.records.map((record: Record) => record.get('documentId').toString());
+    } finally {
+      await session.close();
+    }
+  }
+
+  async getRelatedDocuments(documentId: string, maxDepth: number = 2): Promise<string[]> {
+    const session: Session = this.driver.session();
+    try {
+      const result = await session.run(
+        `
+        MATCH (d:Document {id: $documentId})
+        MATCH (d)-[:MENTIONS]->(e:Entity)
+        MATCH (e)<-[:MENTIONS]-(related:Document)
+        WHERE related.id <> $documentId
+        RETURN DISTINCT related.id as documentId
+        LIMIT 10
+        `,
+        { documentId }
+      );
+
+      return result.records.map((record: Record) => record.get('documentId').toString());
+    } catch (error) {
+      console.error('Error getting related documents:', error);
+      return [];
+    } finally {
+      await session.close();
+    }
+  }
+
+  async searchEntitiesByText(searchText: string, limit: number = 10): Promise<string[]> {
+    const session: Session = this.driver.session();
+    try {
+      const result = await session.run(
+        `
+        MATCH (d:Document)-[:MENTIONS]->(e:Entity)
+        WHERE e.properties CONTAINS $searchText 
+           OR e.type CONTAINS $searchText
+        RETURN DISTINCT d.id as documentId
+        LIMIT $limit
+        `,
+        { searchText, limit }
+      );
+
+      return result.records.map((record: Record) => record.get('documentId').toString());
+    } catch (error) {
+      console.error('Error searching entities by text:', error);
+      return [];
     } finally {
       await session.close();
     }

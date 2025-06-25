@@ -1,6 +1,6 @@
 // routes/templateGenerator.routes.ts
 import express from "express";
-import { templateGeneratorController } from "../controllers/templateGenerator.controller.ts";
+import { templateGeneratorController } from "../controllers/templateGenerator.controller";
 import { Request, Response, NextFunction } from "express";
 
 const router = express.Router();

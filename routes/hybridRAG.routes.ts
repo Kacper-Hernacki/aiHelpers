@@ -5,7 +5,7 @@ import {
   hybridSearch,
   compareSearchMethods,
   getSystemStatus
-} from '../controllers/hybridRAG.controller.js';
+} from '../controllers/hybridRAG.controller';
 
 const router = Router();
 
