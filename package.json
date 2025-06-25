@@ -17,8 +17,8 @@
   },
   "dependencies": {
     "@langchain/community": "^0.3.32",
-    "@langchain/core": "^0.3.40",
-    "@langchain/openai": "^0.5.15",
+    "@langchain/core": "latest",
+    "@langchain/openai": "latest",
     "@notionhq/client": "^2.2.16",
     "@prisma/client": "^6.4.1",
     "@resvg/resvg-js": "^2.6.2",
@@ -33,8 +33,9 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "langchain": "^0.2.11",
+    "langchain": "latest",
     "multer": "^1.4.5-lts.1",
+    "neo4j-driver": "^5.28.1",
     "openai": "^4.53.2",
     "pdf-parse": "^1.1.1",
     "pdf2pic": "^3.2.0",
@@ -44,11 +45,23 @@
     "uuid": "^10.0.0",
     "winston": "^3.17.0",
     "youtubei.js": "^13.3.0",
-    "zod": "^3.23.8"
+    "zod": "latest"
   },
   "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && cp -r assets dist/ 2>/dev/null || true",
+    "build:clean": "rm -rf dist",
     "start": "bun index.ts",
     "start:node": "node --loader ts-node/esm index.ts",
+    "start:prod": "node dist/index.js",
+    "dev": "nodemon index.ts",
+    "test:hybrid": "bun test-hybrid.ts",
+    "setup:neo4j": "chmod +x infrastructure/scripts/setup-neo4j.sh && ./infrastructure/scripts/setup-neo4j.sh",
+    "setup:database": "psql -d $DATABASE_URL -f infrastructure/database/safe_migration.sql",
+    "docker:neo4j": "docker-compose -f infrastructure/docker/docker-compose.neo4j.yml up -d",
+    "docker:neo4j:down": "docker-compose -f infrastructure/docker/docker-compose.neo4j.yml down",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
+    "prisma:studio": "prisma studio",
     "test:social-card": "bun scripts/test-social-card.mjs",
     "test:canvas-direct": "bun scripts/test-canvas-direct.mjs"
   }

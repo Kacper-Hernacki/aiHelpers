@@ -57,6 +57,9 @@ jobs:
               -e DO_SPACES_ACCESS_KEY=${{ secrets.DO_SPACES_ACCESS_KEY }} \
               -e DO_SPACES_SECRET_KEY=${{ secrets.DO_SPACES_SECRET_KEY }} \
               -e DO_SPACES_BUCKET=${{ secrets.DO_SPACES_BUCKET }} \
+              -e NEO4J_URL=${{ secrets.NEO4J_URL }} \
+              -e NEO4J_USER=${{ secrets.NEO4J_USER }} \
+              -e NEO4J_PASSWORD=${{ secrets.NEO4J_PASSWORD }} \
               --restart unless-stopped \
               ghcr.io/kacper-hernacki/aihelpers:latest
 

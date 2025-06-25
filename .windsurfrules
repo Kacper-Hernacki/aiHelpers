@@ -1,0 +1,55 @@
+# aiAdaptiv/aiHelpers - Windsurf Development Rules
+
+## Project Context
+- Node.js/TypeScript backend with Express.js framework
+- Neo4j graph database + PostgreSQL with pgvector for hybrid RAG
+- ES modules (type: "module" in package.json)
+- Production build system using TypeScript compiler to ES2022
+- Infrastructure organized in infrastructure/ directory
+- Bun for development, Node.js for production
+
+## TypeScript & Module Rules
+- Always use .js extensions in TypeScript imports for ES module compatibility
+- Use ES2022 module system in tsconfig.build.json
+- Maintain strict TypeScript typing for services and controllers
+- Express route handlers must return void, not Response objects
+- Import paths should NOT include .ts extensions
+
+## Architecture Guidelines
+- Services in services/ directory: database, graph, storage, AI operations
+- Controllers in controllers/ directory with proper error handling
+- Routes in routes/ directory with middleware integration
+- Infrastructure setup scripts and Docker configs in infrastructure/
+- Documentation in docs/ directory with proper structure
+
+## Database & Search Rules
+- Follow hybrid RAG architecture patterns combining vector and graph search
+- Use proper async/await patterns for database operations
+- Neo4j service methods should return proper TypeScript interfaces
+- pgvector operations should use OpenAI embeddings (text-embedding-3-small)
+- Always handle database connection errors gracefully
+
+## Production Build Rules
+- Use tsconfig.build.json for production builds
+- Compile to dist/ directory with source maps
+- Include assets copying in build process
+- Test production builds with `bun run start:prod`
+- Ensure all imports work in compiled ES modules
+
+## Environment & Configuration
+- Environment variables managed through .env files with fallbacks
+- Use .env.local for development, .env.production for production
+- Store sensitive API keys properly (OpenAI, DigitalOcean, etc.)
+- Docker configurations in infrastructure/docker/
+
+## Error Handling & Logging
+- Always catch and properly handle async errors
+- Use structured logging for debugging
+- Return proper HTTP status codes
+- Include detailed error messages for development
+
+## File Organization
+- Keep root directory clean
+- Use infrastructure/ for setup scripts and configs
+- Organize documentation in docs/ with subdirectories
+- Maintain proper .gitignore for build artifacts
