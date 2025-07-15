@@ -314,14 +314,15 @@ export const socialCardTemplateService = {
         const image = await loadImage(imageBuffer);
 
         ctx.save();
-        // Create a clipping path with rounded corners on the right side
+        // Create a trapezoid clipping path with an angled left edge
+        const topLeftX = width * 0.55;
+        const bottomLeftX = width * 0.45;
+
         ctx.beginPath();
-        ctx.moveTo(imageX, 0);
-        ctx.lineTo(width - cornerRadius, 0);
-        ctx.quadraticCurveTo(width, 0, width, cornerRadius);
-        ctx.lineTo(width, height - cornerRadius);
-        ctx.quadraticCurveTo(width, height, width - cornerRadius, height);
-        ctx.lineTo(imageX, height);
+        ctx.moveTo(topLeftX, 0); // Top-left
+        ctx.lineTo(width, 0); // Top-right
+        ctx.lineTo(width, height); // Bottom-right
+        ctx.lineTo(bottomLeftX, height); // Bottom-left
         ctx.closePath();
         ctx.clip();
 
@@ -345,49 +346,50 @@ export const socialCardTemplateService = {
       }
 
       // 4. Text Content (Left Side)
-      const textMaxWidth = width * 0.55 - 140; // 55% of width minus padding
       const textX = 70;
+      const rightPadding = 70;
       let currentY = 100;
 
-      const wrapText = (text: string, maxWidth: number, font: string): string[] => {
+      // The left edge of the image is a line. Get the x-coordinate of that line at a given y.
+      const getImageBoundaryX = (y: number) => {
+        const topLeftX = width * 0.55;
+        const bottomLeftX = width * 0.45;
+        return bottomLeftX + (topLeftX - bottomLeftX) * (1 - y / height);
+      };
+
+      const wrapAndRenderText = (text: string, font: string, color: string, lineHeight: number) => {
         ctx.font = font;
+        ctx.fillStyle = color;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+
         const words = text.split(' ');
-        const lines: string[] = [];
-        let currentLine = '';
-        for (const word of words) {
-          const testLine = currentLine ? `${currentLine} ${word}` : word;
-          if (ctx.measureText(testLine).width > maxWidth) {
-            lines.push(currentLine);
-            currentLine = word;
+        let line = '';
+
+        for (let i = 0; i < words.length; i++) {
+          const testLine = line + words[i] + ' ';
+          const availableWidth = getImageBoundaryX(currentY) - textX - rightPadding;
+          const metrics = ctx.measureText(testLine);
+
+          if (metrics.width > availableWidth && i > 0) {
+            ctx.fillText(line, textX, currentY);
+            currentY += lineHeight;
+            line = words[i] + ' ';
           } else {
-            currentLine = testLine;
+            line = testLine;
           }
         }
-        lines.push(currentLine);
-        return lines;
+        ctx.fillText(line.trim(), textX, currentY);
+        currentY += lineHeight;
       };
 
       // Title
-      ctx.fillStyle = '#212150'; // Dark Blue
-      ctx.font = '800 65px "Poppins"';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'top';
-      const titleLines = wrapText(title, textMaxWidth, ctx.font);
-      titleLines.forEach(line => {
-        ctx.fillText(line, textX, currentY);
-        currentY += 80; // Line height
-      });
+      wrapAndRenderText(title, '800 65px "Poppins"', '#212150', 80);
 
       currentY += 20; // Space between title and subtitle
 
       // Subtitle
-      ctx.fillStyle = '#5F6368'; // Muted Blue/Grey
-      ctx.font = '500 28px "Poppins"';
-      const subtitleLines = wrapText(subtitle, textMaxWidth, ctx.font);
-      subtitleLines.forEach(line => {
-        ctx.fillText(line, textX, currentY);
-        currentY += 40; // Line height
-      });
+      wrapAndRenderText(subtitle, '500 28px "Poppins"', '#5F6368', 40);
 
       // 5. Logo
       try {
