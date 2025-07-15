@@ -384,12 +384,12 @@ export const socialCardTemplateService = {
       };
 
       // Title
-      wrapAndRenderText(title, '800 65px "Poppins"', '#212150', 80);
+      wrapAndRenderText(title, '900 65px "Poppins"', '#148ae0', 80);
 
       currentY += 20; // Space between title and subtitle
 
       // Subtitle
-      wrapAndRenderText(subtitle, '500 28px "Poppins"', '#5F6368', 40);
+      wrapAndRenderText(subtitle, 'bold 28px "Poppins"', '#05b4d5', 40);
 
       // 5. Logo
       try {
