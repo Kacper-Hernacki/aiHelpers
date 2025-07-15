@@ -1,6 +1,6 @@
 // routes/templateGenerator.routes.ts
 import express from "express";
-import { templateGeneratorController } from "../controllers/templateGenerator.controller";
+import { templateGeneratorController } from "../controllers/templateGenerator.controller.js";
 import { Request, Response, NextFunction } from "express";
 
 const router = express.Router();
@@ -20,6 +20,12 @@ const asyncHandler =
 router.post(
   "/generate-thumbnail",
   asyncHandler(templateGeneratorController.generateArticleThumbnail)
+);
+
+// Add the square thumbnail generation endpoint
+router.post(
+  "/generate-square-thumbnail",
+  asyncHandler(templateGeneratorController.generateSquareThumbnail)
 );
 
 export default router;

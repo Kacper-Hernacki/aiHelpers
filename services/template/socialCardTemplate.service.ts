@@ -37,6 +37,12 @@ Object.entries(fontsToRegister).forEach(([weight, file]) => {
   }
 });
 
+interface SquareCardParams {
+  imageUrl: string;
+  title: string;
+  subtitle: string;
+}
+
 export const socialCardTemplateService = {
   /**
    * Create a social media card template using Canvas
@@ -259,6 +265,161 @@ export const socialCardTemplateService = {
     } catch (error: any) {
       debug('Error creating social card:', error);
       throw new Error(`Failed to create social card: ${error.message}`);
+    }
+  },
+
+  /**
+   * Creates a square (1080x1080) social media card.
+   * @param {SquareCardParams} params - The parameters for creating the card.
+   * @returns {Promise<any>} - Object with URLs for the created template.
+   */
+  createSquareSocialCard: async (params: SquareCardParams): Promise<any> => {
+    const { imageUrl, title, subtitle } = params;
+    try {
+      debug(`Creating square social card with image: ${imageUrl}`);
+      debug(`Title: ${title}, Subtitle: ${subtitle}`);
+
+      const width = 1080;
+      const height = 1080;
+      const canvas = createCanvas(width, height);
+      const ctx = canvas.getContext('2d');
+
+      // Set high-quality rendering options
+      ctx.quality = 'best';
+      ctx.patternQuality = 'best';
+      ctx.antialias = 'subpixel';
+      ctx.textDrawingMode = 'path';
+
+      // 1. Background Color
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, width, height);
+
+      // 2. Background Decorative Elements
+      ctx.save();
+      ctx.fillStyle = '#E8F0FE'; // Light blue/grey
+      ctx.globalAlpha = 0.5; // Low opacity
+      // Simple rectangles as decorative elements
+      ctx.fillRect(30, 40, 80, 80); // Top-left
+      ctx.fillRect(120, 700, 150, 150); // Bottom-left, below text area
+      ctx.restore();
+
+      // 3. Embedded Image (Right Side)
+      const imageWidth = width * 0.45; // 45% of the canvas width
+      const imageX = width - imageWidth;
+      const cornerRadius = 30;
+
+      try {
+        const imageResponse = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+        const imageBuffer = Buffer.from(imageResponse.data, 'binary');
+        const image = await loadImage(imageBuffer);
+
+        ctx.save();
+        // Create a clipping path with rounded corners on the right side
+        ctx.beginPath();
+        ctx.moveTo(imageX, 0);
+        ctx.lineTo(width - cornerRadius, 0);
+        ctx.quadraticCurveTo(width, 0, width, cornerRadius);
+        ctx.lineTo(width, height - cornerRadius);
+        ctx.quadraticCurveTo(width, height, width - cornerRadius, height);
+        ctx.lineTo(imageX, height);
+        ctx.closePath();
+        ctx.clip();
+
+        // Scale and center the image to fill the clipped area (aspect fill)
+        const aspectRatio = image.width / image.height;
+        let drawWidth = imageWidth;
+        let drawHeight = drawWidth / aspectRatio;
+        if (drawHeight < height) {
+          drawHeight = height;
+          drawWidth = drawHeight * aspectRatio;
+        }
+        const drawX = imageX + (imageWidth - drawWidth) / 2;
+        const drawY = (height - drawHeight) / 2;
+
+        ctx.drawImage(image, drawX, drawY, drawWidth, drawHeight);
+        ctx.restore();
+
+      } catch (error: any) {
+        debug('Error loading or drawing embedded image:', error.message);
+        // Continue without the image if it fails to load
+      }
+
+      // 4. Text Content (Left Side)
+      const textMaxWidth = width * 0.55 - 140; // 55% of width minus padding
+      const textX = 70;
+      let currentY = 100;
+
+      const wrapText = (text: string, maxWidth: number, font: string): string[] => {
+        ctx.font = font;
+        const words = text.split(' ');
+        const lines: string[] = [];
+        let currentLine = '';
+        for (const word of words) {
+          const testLine = currentLine ? `${currentLine} ${word}` : word;
+          if (ctx.measureText(testLine).width > maxWidth) {
+            lines.push(currentLine);
+            currentLine = word;
+          } else {
+            currentLine = testLine;
+          }
+        }
+        lines.push(currentLine);
+        return lines;
+      };
+
+      // Title
+      ctx.fillStyle = '#212150'; // Dark Blue
+      ctx.font = '800 65px "Poppins"';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      const titleLines = wrapText(title, textMaxWidth, ctx.font);
+      titleLines.forEach(line => {
+        ctx.fillText(line, textX, currentY);
+        currentY += 80; // Line height
+      });
+
+      currentY += 20; // Space between title and subtitle
+
+      // Subtitle
+      ctx.fillStyle = '#5F6368'; // Muted Blue/Grey
+      ctx.font = '500 28px "Poppins"';
+      const subtitleLines = wrapText(subtitle, textMaxWidth, ctx.font);
+      subtitleLines.forEach(line => {
+        ctx.fillText(line, textX, currentY);
+        currentY += 40; // Line height
+      });
+
+      // 5. Logo
+      try {
+        const logoPath = path.join(process.cwd(), 'assets', 'aiadaptiv-text-logo.png');
+        const logo = await loadImage(logoPath);
+        const logoAspectRatio = logo.width / logo.height;
+        const logoHeight = 40;
+        const logoWidth = logoHeight * logoAspectRatio;
+        ctx.drawImage(logo, textX, height - logoHeight - 70, logoWidth, logoHeight);
+      } catch (logoError: any) {
+        debug('Logo not found, skipping logo drawing.');
+      }
+
+      // 6. Finalize and Upload
+      debug('Converting canvas to buffer...');
+      const buffer = canvas.toBuffer('image/png', { compressionLevel: 9, resolution: 300 });
+      const timestamp = new Date().getTime();
+      const sanitizedTitle = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 30);
+      const filename = `square-card-${timestamp}-${sanitizedTitle}.png`;
+
+      debug('Uploading file...');
+      const fileData = await digitalOceanService.uploadFile(buffer, filename);
+
+      return {
+        success: true,
+        message: 'Square social card created successfully',
+        data: fileData,
+      };
+
+    } catch (error: any) {
+      debug('Error creating square social card:', error);
+      throw new Error(`Failed to create square social card: ${error.message}`);
     }
   }
 };
