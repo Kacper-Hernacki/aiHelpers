@@ -294,32 +294,16 @@ export const imageAnalysisController: ImageAnalysisController = {
       });
     }
     
-    const files: any[] = [];
-    const imageBuffers: {buffer: Buffer, mimeType: string, originalName: string, url: string}[] = [];
-    
-    const bb = busboy({ headers: req.headers });
-    
-    const responseTimeout = setTimeout(() => {
-      debug('TIMEOUT: Sending response after 15 seconds');
-      sendResponse();
-    }, 15000);
-    
-    const sendResponse = async () => {
-      clearTimeout(responseTimeout);
-      
-      try {
-        if (imageBuffers.length === 0) {
-          return res.status(400).json({
-            status: "error",
-            message: "No valid images were uploaded"
-          });
-        }
-        
-        debug(`Processing ${imageBuffers.length} images for text extraction`);
-        
-        const imageData = imageBuffers[0];
+    fileProcessorService.processFileUpload(
+      req,
+      res,
+      'image',
+      (mimeType) => mimeType.startsWith('image/'),
+      async (fileData, fileBuffer, mimeType) => {
         try {
-          const base64Image = imageData.buffer.toString('base64');
+          debug('Extracting text from image with OpenAI');
+          
+          const base64Image = fileBuffer.toString('base64');
           
           const response = await openaiClient.chat.completions.create({
             model: "gpt-4o",
@@ -335,7 +319,7 @@ export const imageAnalysisController: ImageAnalysisController = {
                   {
                     type: "image_url",
                     image_url: {
-                      url: `data:${imageData.mimeType};base64,${base64Image}`,
+                      url: `data:${mimeType};base64,${base64Image}`,
                     },
                   },
                 ],
@@ -346,86 +330,31 @@ export const imageAnalysisController: ImageAnalysisController = {
           
           const extractedText = response.choices[0]?.message?.content || "N/A";
           
-          return res.status(200).json({
+          res.status(200).json({
             status: "success",
             message: "Text extracted from image successfully",
             data: {
-              files,
+              ...fileData,
               extraction: {
                 extractedText,
-                originalName: imageData.originalName,
-                url: imageData.url
               }
             }
           });
         } catch (openaiError: any) {
           debug('OpenAI API error:', openaiError);
-          return res.status(500).json({
+          res.status(500).json({
             status: "error",
             message: `Text extraction failed: ${openaiError.message}`,
-            files
+            data: fileData
           });
         }
-      } catch (error: any) {
-        debug('Error during text extraction:', error);
-        return res.status(500).json({
+      },
+      () => {
+        res.status(400).json({
           status: "error",
-          message: `Error extracting text: ${error.message}`,
-          files
+          message: "No image was uploaded with field name 'image'"
         });
       }
-    };
-    
-    bb.on('file', (field: string, file: any, info: any) => {
-      const { filename, mimeType } = info;
-      
-      if (!mimeType.startsWith('image/')) {
-        debug(`Skipping non-image file: ${filename} (${mimeType})`);
-        file.resume();
-        return;
-      }
-      
-      debug(`Processing image: ${filename}`);
-      
-      const chunks: Buffer[] = [];
-      file.on('data', (chunk: Buffer) => chunks.push(chunk));
-      
-      file.on('close', async () => {
-        try {
-          if (chunks.length === 0) return;
-          
-          const buffer = Buffer.concat(chunks);
-          
-          const result = await digitalOceanService.uploadFile(buffer, filename, mimeType);
-          files.push(result);
-          
-          imageBuffers.push({
-            buffer,
-            mimeType,
-            originalName: filename,
-            url: result.url
-          });
-          
-        } catch (err) {
-          debug('Upload error:', err);
-        }
-      });
-    });
-    
-    bb.on('finish', () => {
-      debug('Parsing complete');
-      sendResponse();
-    });
-    
-    bb.on('error', (err: Error) => {
-      debug('Busboy error:', err);
-      clearTimeout(responseTimeout);
-      return res.status(500).json({
-        status: "error",
-        message: `Error processing form data: ${err.message}`
-      });
-    });
-    
-    req.pipe(bb);
+    );
   }
 };
