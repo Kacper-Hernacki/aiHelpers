@@ -310,12 +310,12 @@ export const imageAnalysisController: ImageAnalysisController = {
             messages: [
               {
                 role: "system",
-                content: "Extract ALL visible text from this image. Include every word, phrase, letter, number, symbol, and character you can see. Be extremely thorough and comprehensive. Include text from buttons, labels, captions, titles, body text, watermarks, timestamps, usernames, hashtags, and any other visible text elements. If no text is visible, respond with 'N/A'."
+                content: "You are an OCR system. Extract ONLY the text that is actually visible in this image. Do NOT infer, guess, or make up any text. Do NOT describe what the image shows. Do NOT add explanations. ONLY return the exact text you can see written in the image. If there is no visible text, respond with 'N/A'. Be precise and accurate - return only what is literally written."
               },
               {
                 role: "user",
                 content: [
-                  { type: "text", text: "Extract all visible text from this image:" },
+                  { type: "text", text: "Extract only the visible text:" },
                   {
                     type: "image_url",
                     image_url: {
