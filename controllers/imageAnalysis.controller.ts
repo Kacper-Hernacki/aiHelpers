@@ -297,7 +297,7 @@ export const imageAnalysisController: ImageAnalysisController = {
     fileProcessorService.processFileUpload(
       req,
       res,
-      'image',
+      'file',
       (mimeType) => mimeType.startsWith('image/'),
       async (fileData, fileBuffer, mimeType) => {
         try {
@@ -331,7 +331,7 @@ export const imageAnalysisController: ImageAnalysisController = {
           const extractedText = response.choices[0]?.message?.content || "N/A";
           
           res.status(200).json({
-            status: "success",
+            success: true,
             message: "Text extracted from image successfully",
             data: {
               ...fileData,
@@ -343,7 +343,7 @@ export const imageAnalysisController: ImageAnalysisController = {
         } catch (openaiError: any) {
           debug('OpenAI API error:', openaiError);
           res.status(500).json({
-            status: "error",
+            success: false,
             message: `Text extraction failed: ${openaiError.message}`,
             data: fileData
           });
@@ -351,8 +351,8 @@ export const imageAnalysisController: ImageAnalysisController = {
       },
       () => {
         res.status(400).json({
-          status: "error",
-          message: "No image was uploaded with field name 'image'"
+          success: false,
+          message: "No file was uploaded with field name 'file'"
         });
       }
     );
