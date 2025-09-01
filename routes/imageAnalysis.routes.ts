@@ -21,4 +21,7 @@ router.post("/analyze-image", asyncHandler(imageAnalysisController.analyzeImage)
 // Add endpoint for analyzing multiple images simultaneously
 router.post("/analyze-multiple-images", asyncHandler(analyzeMultipleImages));
 
+// Add endpoint for extracting text from images
+router.post("/extract-text", asyncHandler(imageAnalysisController.extractText));
+
 export default router;

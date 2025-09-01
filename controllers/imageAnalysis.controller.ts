@@ -3,7 +3,14 @@ import { Request, Response } from "express";
 import { openaiService } from "../services/openai/openai.service";
 import { fileProcessorService } from "../services/file/fileProcessor.service";
 import { multipleImageAnalysisService } from "../services/imageAnalysis/multipleImageAnalysis.service";
+import { digitalOceanService } from "../services/storage/digitalOcean.service";
 import fetch from "node-fetch";
+import { OpenAI } from "openai";
+import busboy from "busboy";
+
+const openaiClient = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 // Debug logging function
 const debug = (...args: any[]) => {
@@ -14,6 +21,7 @@ const debug = (...args: any[]) => {
 type ImageAnalysisController = {
   analyzeImage: (req: Request, res: Response) => void;
   analyzeMultipleImages: (req: Request, res: Response) => void;
+  extractText: (req: Request, res: Response) => void;
 };
 
 // Export with explicit type annotation
@@ -269,6 +277,155 @@ export const imageAnalysisController: ImageAnalysisController = {
     });
     
     // Start parsing
+    req.pipe(bb);
+  },
+
+  /**
+   * Extract text from an image using OpenAI's Vision API
+   * Endpoint: POST /api/image/extract-text
+   */
+  extractText: (req: Request, res: Response) => {
+    debug("Starting text extraction handler");
+    
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({
+        status: "error",
+        message: "OpenAI API key is not configured"
+      });
+    }
+    
+    const files: any[] = [];
+    const imageBuffers: {buffer: Buffer, mimeType: string, originalName: string, url: string}[] = [];
+    
+    const bb = busboy({ headers: req.headers });
+    
+    const responseTimeout = setTimeout(() => {
+      debug('TIMEOUT: Sending response after 15 seconds');
+      sendResponse();
+    }, 15000);
+    
+    const sendResponse = async () => {
+      clearTimeout(responseTimeout);
+      
+      try {
+        if (imageBuffers.length === 0) {
+          return res.status(400).json({
+            status: "error",
+            message: "No valid images were uploaded"
+          });
+        }
+        
+        debug(`Processing ${imageBuffers.length} images for text extraction`);
+        
+        const imageData = imageBuffers[0];
+        try {
+          const base64Image = imageData.buffer.toString('base64');
+          
+          const response = await openaiClient.chat.completions.create({
+            model: "gpt-4o",
+            messages: [
+              {
+                role: "system",
+                content: "Extract ALL visible text from this image. Include every word, phrase, letter, number, symbol, and character you can see. Be extremely thorough and comprehensive. Include text from buttons, labels, captions, titles, body text, watermarks, timestamps, usernames, hashtags, and any other visible text elements. If no text is visible, respond with 'N/A'."
+              },
+              {
+                role: "user",
+                content: [
+                  { type: "text", text: "Extract all visible text from this image:" },
+                  {
+                    type: "image_url",
+                    image_url: {
+                      url: `data:${imageData.mimeType};base64,${base64Image}`,
+                    },
+                  },
+                ],
+              },
+            ],
+            max_tokens: 1500,
+          });
+          
+          const extractedText = response.choices[0]?.message?.content || "N/A";
+          
+          return res.status(200).json({
+            status: "success",
+            message: "Text extracted from image successfully",
+            data: {
+              files,
+              extraction: {
+                extractedText,
+                originalName: imageData.originalName,
+                url: imageData.url
+              }
+            }
+          });
+        } catch (openaiError: any) {
+          debug('OpenAI API error:', openaiError);
+          return res.status(500).json({
+            status: "error",
+            message: `Text extraction failed: ${openaiError.message}`,
+            files
+          });
+        }
+      } catch (error: any) {
+        debug('Error during text extraction:', error);
+        return res.status(500).json({
+          status: "error",
+          message: `Error extracting text: ${error.message}`,
+          files
+        });
+      }
+    };
+    
+    bb.on('file', (field: string, file: any, info: any) => {
+      const { filename, mimeType } = info;
+      
+      if (!mimeType.startsWith('image/')) {
+        debug(`Skipping non-image file: ${filename} (${mimeType})`);
+        file.resume();
+        return;
+      }
+      
+      debug(`Processing image: ${filename}`);
+      
+      const chunks: Buffer[] = [];
+      file.on('data', (chunk: Buffer) => chunks.push(chunk));
+      
+      file.on('close', async () => {
+        try {
+          if (chunks.length === 0) return;
+          
+          const buffer = Buffer.concat(chunks);
+          
+          const result = await digitalOceanService.uploadFile(buffer, filename, mimeType);
+          files.push(result);
+          
+          imageBuffers.push({
+            buffer,
+            mimeType,
+            originalName: filename,
+            url: result.url
+          });
+          
+        } catch (err) {
+          debug('Upload error:', err);
+        }
+      });
+    });
+    
+    bb.on('finish', () => {
+      debug('Parsing complete');
+      sendResponse();
+    });
+    
+    bb.on('error', (err: Error) => {
+      debug('Busboy error:', err);
+      clearTimeout(responseTimeout);
+      return res.status(500).json({
+        status: "error",
+        message: `Error processing form data: ${err.message}`
+      });
+    });
+    
     req.pipe(bb);
   }
 };
