@@ -7,6 +7,7 @@ import { digitalOceanService } from "../services/storage/digitalOcean.service";
 import fetch from "node-fetch";
 import { OpenAI } from "openai";
 import busboy from "busboy";
+import Tesseract from "tesseract.js";
 
 const openaiClient = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -301,34 +302,13 @@ export const imageAnalysisController: ImageAnalysisController = {
       (mimeType) => mimeType.startsWith('image/'),
       async (fileData, fileBuffer, mimeType) => {
         try {
-          debug('Extracting text from image with OpenAI');
+          debug('Extracting text from image using Tesseract OCR');
           
-          const base64Image = fileBuffer.toString('base64');
-          
-          const response = await openaiClient.chat.completions.create({
-            model: "gpt-4o",
-            messages: [
-              {
-                role: "system",
-                content: "You are an OCR system. Extract ONLY the text that is actually visible in this image. Do NOT infer, guess, or make up any text. Do NOT describe what the image shows. Do NOT add explanations. ONLY return the exact text you can see written in the image. If there is no visible text, respond with 'N/A'. Be precise and accurate - return only what is literally written."
-              },
-              {
-                role: "user",
-                content: [
-                  { type: "text", text: "Extract only the visible text:" },
-                  {
-                    type: "image_url",
-                    image_url: {
-                      url: `data:${mimeType};base64,${base64Image}`,
-                    },
-                  },
-                ],
-              },
-            ],
-            max_tokens: 1500,
+          const result = await Tesseract.recognize(fileBuffer, 'eng', {
+            logger: m => debug('Tesseract progress:', m)
           });
           
-          const extractedText = response.choices[0]?.message?.content || "N/A";
+          const extractedText = result.data.text.trim() || "N/A";
           
           res.status(200).json({
             success: true,
@@ -340,11 +320,11 @@ export const imageAnalysisController: ImageAnalysisController = {
               }
             }
           });
-        } catch (openaiError: any) {
-          debug('OpenAI API error:', openaiError);
+        } catch (ocrError: any) {
+          debug('OCR error:', ocrError);
           res.status(500).json({
             success: false,
-            message: `Text extraction failed: ${openaiError.message}`,
+            message: `Text extraction failed: ${ocrError.message}`,
             data: fileData
           });
         }
