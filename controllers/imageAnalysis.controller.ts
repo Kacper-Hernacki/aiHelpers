@@ -302,13 +302,34 @@ export const imageAnalysisController: ImageAnalysisController = {
       (mimeType) => mimeType.startsWith('image/'),
       async (fileData, fileBuffer, mimeType) => {
         try {
-          debug('Extracting text from image using Tesseract OCR');
+          debug('Extracting text from image with OpenAI');
           
-          const result = await Tesseract.recognize(fileBuffer, 'eng', {
-            logger: m => debug('Tesseract progress:', m)
+          const base64Image = fileBuffer.toString('base64');
+          
+          const response = await openaiClient.chat.completions.create({
+            model: "gpt-4o",
+            messages: [
+              {
+                role: "system",
+                content: "You are an OCR system. Extract ONLY the text that is actually visible in this image. Do NOT infer, guess, or make up any text. Do NOT describe what the image shows. Do NOT add explanations. ONLY return the exact text you can see written in the image. If there is no visible text, respond with 'N/A'. Be precise and accurate - return only what is literally written."
+              },
+              {
+                role: "user",
+                content: [
+                  { type: "text", text: "Extract only the visible text:" },
+                  {
+                    type: "image_url",
+                    image_url: {
+                      url: `data:${mimeType};base64,${base64Image}`,
+                    },
+                  },
+                ],
+              },
+            ],
+            max_tokens: 1500,
           });
           
-          const extractedText = result.data.text.trim() || "N/A";
+          const extractedText = response.choices[0]?.message?.content || "N/A";
           
           res.status(200).json({
             success: true,
@@ -320,11 +341,11 @@ export const imageAnalysisController: ImageAnalysisController = {
               }
             }
           });
-        } catch (ocrError: any) {
-          debug('OCR error:', ocrError);
+        } catch (openaiError: any) {
+          debug('OpenAI API error:', openaiError);
           res.status(500).json({
             success: false,
-            message: `Text extraction failed: ${ocrError.message}`,
+            message: `Text extraction failed: ${openaiError.message}`,
             data: fileData
           });
         }
