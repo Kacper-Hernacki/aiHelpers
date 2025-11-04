@@ -10,6 +10,8 @@ import imageAnalysisRoutes from "./imageAnalysis.routes";
 import templateGeneratorRoutes from "./templateGenerator.routes";
 import pdfEmbeddingRoutes from "./pdfEmbedding.routes";
 import hybridRAGRoutes from "./hybridRAG.routes";
+import openrouterRoutes from "./openrouter.routes";
+import aiFashionAgentRoutes from "./aiFashionAgent.routes";
 
 export default (app: Express) => {
   app.use("/youtube", youtubeRoutes);
@@ -23,4 +25,6 @@ export default (app: Express) => {
   app.use("/template", templateGeneratorRoutes);
   app.use("/pdf", pdfEmbeddingRoutes);
   app.use("/hybrid", hybridRAGRoutes);
+  app.use("/openrouter", openrouterRoutes);
+  app.use("/ai-fashion-agent", aiFashionAgentRoutes);
 };
